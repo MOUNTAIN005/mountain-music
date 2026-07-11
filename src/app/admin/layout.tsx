@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard,
   Disc3,
+  User,
   Image as ImageIcon,
   Music,
   FileText,
@@ -21,9 +22,11 @@ const navItems = [
   { label: '推荐歌曲编辑', href: '/admin/recommend', icon: Music },
   { label: '审核投稿', href: '/admin/submissions', icon: FileText },
   { label: '网站设置', href: '/admin/settings', icon: Settings },
+  { label: '管理员设置', href: '/admin/profile', icon: User },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
 
@@ -66,10 +69,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
 
         {/* Bottom */}
-        <div className="p-3 border-t border-white/5">
+        <div className="p-3 border-t border-white/5 space-y-1">
           <Link href="/" className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-gray-600 hover:text-white transition-colors">
             ← 返回前台
           </Link>
+          <button onClick={() => { document.cookie = 'token=; path=/; max-age=0'; window.location.href = '/admin/login'; }}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-red-400/60 hover:text-red-400 hover:bg-red-500/5 transition-colors">
+            退出登录
+          </button>
         </div>
       </aside>
 

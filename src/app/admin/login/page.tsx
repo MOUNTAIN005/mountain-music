@@ -18,16 +18,18 @@ export default function AdminLoginPage() {
     setError('')
 
     try {
-      // Check against default admin credentials
-      const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@mountainmusic.com'
-      const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'admin123456'
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
 
-      // For demo: using env-based simple auth
-      if (email === 'admin@mountainmusic.com' && password === 'admin123456') {
-        document.cookie = 'token=demo-token-for-admin; path=/; max-age=604800'
+      const data = await res.json()
+
+      if (data.success) {
         router.push('/admin/dashboard')
       } else {
-        setError('邮箱或密码错误')
+        setError(data.error || '邮箱或密码错误')
       }
     } catch {
       setError('登录失败，请重试')
