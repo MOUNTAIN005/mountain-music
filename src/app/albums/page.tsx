@@ -7,7 +7,7 @@ import type { Album } from '@/types'
 
 const apiFileUrl = (url: string | null | undefined) => {
   if (!url) return null
-  return url.startsWith("/uploads/") ? "/api/files" + url : url
+  return url.startsWith("/uploads/") ? url.replace("/uploads/", "/api/uploads/") : url
 }
 
 export default function AlbumsPage() {

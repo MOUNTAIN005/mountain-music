@@ -11,7 +11,14 @@ const MIME_TYPES: Record<string, string> = {
 
 export async function GET(_req: Request, { params }: { params: Promise<{ path: string[] }> }) {
   const { path } = await params
-  const filePath = join(process.cwd(), 'public', ...path)
+
+  // Support UPLOAD_DIR for uploads path, fall back to public/
+  const uploadDir = process.env.UPLOAD_DIR
+  const isUploads = path[0] === 'uploads'
+  const filePath = uploadDir && isUploads
+    ? join(uploadDir, ...path.slice(1))
+    : join(process.cwd(), 'public', ...path)
+
   if (!existsSync(filePath)) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }

@@ -20,7 +20,7 @@ function parseLyrics(text: string): { time: number; text: string }[] {
   }).filter(l => l.text.trim())
 }
 
-const apiFileUrl = (url: string) => url?.startsWith("/uploads/") ? "/api/files" + url : url
+const apiFileUrl = (url: string) => url?.startsWith("/uploads/") ? url.replace("/uploads/", "/api/uploads/") : url
 
 export default function MusicRecommendation() {
   const [songs, setSongs] = useState<any[]>([])

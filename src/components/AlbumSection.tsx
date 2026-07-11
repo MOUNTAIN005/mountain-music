@@ -6,7 +6,7 @@ import { useAudioPlayer } from '@/hooks/useAudioPlayer'
 
 const apiFileUrl = (url: string | null | undefined) => {
   if (!url) return null
-  return url.startsWith("/uploads/") ? "/api/files" + url : url
+  return url.startsWith("/uploads/") ? url.replace("/uploads/", "/api/uploads/") : url
 }
 
 function parseLyrics(text: string): { time: number; text: string }[] {

@@ -8,7 +8,7 @@ import type { Song } from '@/types'
 
 type SongItem = Song & { isRecommended?: boolean }
 
-const apiFileUrl = (url: string) => url?.startsWith("/uploads/") ? "/api/files" + url : url
+const apiFileUrl = (url: string) => url?.startsWith("/uploads/") ? url.replace("/uploads/", "/api/uploads/") : url
 
 const formatDuration = (sec: number) => {
   if (!sec) return '--:--'

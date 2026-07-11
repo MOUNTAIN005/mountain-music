@@ -8,7 +8,7 @@ import { useAudioPlayer } from '@/hooks/useAudioPlayer'
 const rankColors = ['#FFD700', '#C0C0C0', '#CD7F32', '', '', '', '', '', '', '']
 const rankBgColors = ['rgba(255,215,0,0.1)', 'rgba(192,192,192,0.1)', 'rgba(205,127,50,0.1)', '', '', '', '', '', '', '']
 
-const apiFileUrl = (url: string) => url?.startsWith("/uploads/") ? "/api/files" + url : url
+const apiFileUrl = (url: string) => url?.startsWith("/uploads/") ? url.replace("/uploads/", "/api/uploads/") : url
 
 export default function RankingPage() {
   const [ranking, setRanking] = useState<any[]>([])
