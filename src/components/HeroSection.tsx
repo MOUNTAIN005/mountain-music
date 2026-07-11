@@ -50,7 +50,7 @@ export default function HeroSection() {
   const currentLineIdx = isPlaying && currentSong?.id === song?.id
     ? lyricsLines.findLastIndex(l => currentTime >= l.time) : -1
 
-  const bgImage = heroData?.bgImage ? `/api/files${heroData.bgImage}` : '/api/files/images/hero-bg.jpg'
+  const bgImage = heroData?.bgImage || '/images/hero-bg.png'
   const isThisPlaying = currentSong?.id === song?.id && isPlaying
 
   const handlePlayPause = () => {
