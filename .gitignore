@@ -8,3 +8,10 @@ music/
 public/uploads/
 sshpass*
 *.tar.gz
+
+# Mac files
+.DS_Store
+*.textClipping
+prisma/dev.db
+public/music
+/music/
