@@ -6,7 +6,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard,
   Disc3,
-  User,
   Image as ImageIcon,
   Music,
   FileText,
@@ -22,13 +21,18 @@ const navItems = [
   { label: '推荐歌曲编辑', href: '/admin/recommend', icon: Music },
   { label: '审核投稿', href: '/admin/submissions', icon: FileText },
   { label: '网站设置', href: '/admin/settings', icon: Settings },
-  { label: '管理员设置', href: '/admin/profile', icon: User },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
+  const isLoginPage = pathname === '/admin/login'
+
+  // Login page: no sidebar, just render children
+  if (isLoginPage) {
+    return <div className="min-h-screen bg-[#080808]">{children}</div>
+  }
 
   return (
     <div className="min-h-screen bg-[#080808] flex">

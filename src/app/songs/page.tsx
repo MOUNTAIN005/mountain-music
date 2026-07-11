@@ -97,10 +97,10 @@ export default function SongsPage() {
         ) : filtered.length === 0 ? (
           <div className="text-center py-20"><p className="text-gray-500">没有找到相关歌曲</p></div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-            {[0, 1, 2, 3].map(colIdx => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+            {[0, 1, 2].map(colIdx => (
               <div key={colIdx} className="space-y-0.5">
-                {filtered.filter((_, i) => i % 4 === colIdx).map(song => (
+                {filtered.filter((_, i) => i % 3 === colIdx).map(song => (
                   <SongRow
                     key={song.id}
                     song={song}
@@ -109,7 +109,7 @@ export default function SongsPage() {
                     onPlay={handlePlay}
                   />
                 ))}
-                {filtered.filter((_, i) => i % 4 === colIdx).length === 0 && (
+                {filtered.filter((_, i) => i % 3 === colIdx).length === 0 && (
                   <p className="text-xs text-gray-700 text-center py-8">暂无歌曲</p>
                 )}
               </div>
