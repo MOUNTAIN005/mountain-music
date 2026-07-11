@@ -1,9 +1,28 @@
-import { NextResponse } from 'next/server'; import { readdirSync, statSync } from 'fs'; import { join } from 'path'
+import { NextResponse } from 'next/server'
+import { readdirSync, statSync } from 'fs'
+import { join } from 'path'
+
 export async function GET() {
-  const dir = join(process.cwd(), 'public', 'uploads')
+  const uploadDir = process.env.UPLOAD_DIR || join(process.cwd(), 'public', 'uploads')
+
   try {
-    const files = readdirSync(dir).filter(f => f.match(/\.(wav|mp3|flac|ogg|aac|m4a|jpg|jpeg|png|webp|gif)$/i))
-    const result = files.map(f => ({ name: f, url: '/uploads/' + f, size: statSync(join(dir, f)).size, ext: f.split('.').pop() }))
+    const files = readdirSync(uploadDir).filter(f =>
+      f.match(/\.(wav|mp3|flac|ogg|aac|m4a|jpg|jpeg|png|webp|gif)$/i)
+    )
+
+    const result = files.map(f => {
+      const ext = f.split('.').pop()?.toLowerCase() || ''
+      const url = process.env.UPLOAD_DIR ? `/api/uploads/${f}` : `/uploads/${f}`
+      return {
+        name: f,
+        url,
+        size: statSync(join(uploadDir, f)).size,
+        ext,
+      }
+    })
+
     return NextResponse.json({ success: true, data: result })
-  } catch { return NextResponse.json({ success: true, data: [] }) }
+  } catch {
+    return NextResponse.json({ success: true, data: [] })
+  }
 }
