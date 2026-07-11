@@ -11,9 +11,9 @@ const MIME_TYPES: Record<string, string> = {
 
 export async function GET(
   _request: Request,
-  { params }: { params: { file: string } }
+  { params }: { params: Promise<{ file: string }> }
 ) {
-  const fileName = params.file
+  const { file: fileName } = await params
 
   // Security: prevent directory traversal
   if (fileName.includes('..') || fileName.includes('/') || fileName.includes('\\')) {
@@ -24,11 +24,11 @@ export async function GET(
   const filePath = join(uploadDir, fileName)
 
   try {
-    const buffer = readFileSync(filePath)
+    const data = readFileSync(filePath)
     const ext = fileName.split('.').pop()?.toLowerCase() || ''
     const contentType = MIME_TYPES[ext] || 'application/octet-stream'
 
-    return new NextResponse(buffer, {
+    return new NextResponse(data, {
       headers: {
         'Content-Type': contentType,
         'Cache-Control': 'public, max-age=31536000',
