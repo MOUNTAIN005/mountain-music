@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=file:/app/data/mountain.db
+      - NODE_ENV=production
+    volumes:
+      - mountain_data:/app/data
+      - mountain_uploads:/app/public/uploads
+    restart: unless-stopped
+
+volumes:
+  mountain_data:
+  mountain_uploads:

@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  password  String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Song {
+  id          Int      @id @default(autoincrement())
+  title       String
+  artist      String   @default("artist")
+  coverUrl    String?
+  audioUrl    String
+  lyrics      String?
+  description String?
+  genre       String?
+  duration    Int      @default(0)
+  playCount   Int      @default(0)
+  likeCount   Int      @default(0)
+  sortOrder   Int      @default(0)
+  isPublished Boolean  @default(true)
+  isRecommended Boolean @default(false)
+  albumId     Int?
+  album       Album?   @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Album {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  coverUrl    String?
+  releaseDate DateTime?
+  playCount   Int      @default(0)
+  isPublished Boolean  @default(true)
+  songs       Song[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+ model RecommendedSong {
+   id          Int      @id @default(autoincrement())
+   title       String
+   artist      String   @default("山影知道")
+   coverUrl    String?
+   audioUrl    String
+   description String?
+   lyrics      String?
+   album       String?
+   sortOrder   Int      @default(0)
+   createdAt   DateTime @default(now())
+   updatedAt   DateTime @updatedAt
+ }
+ 
+ model Story {
+  id          Int      @id @default(autoincrement())
+  title       String
+  author      String
+  content     String
+  imageUrl    String?
+  status      String   @default("pending")
+  isRead      Boolean  @default(false)
+  isDisplayed Boolean  @default(false)
+  isFeatured  Boolean  @default(false)
+  submittedBy String?
+  submitterEmail String?
+  attachmentUrl String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Contact {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  subject   String?
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Setting {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+}
+
+model PlayRecord {
+  id        Int      @id @default(autoincrement())
+  songId    Int
+  ip        String?
+  createdAt DateTime @default(now())
+}
