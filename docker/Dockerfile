@@ -39,7 +39,11 @@ COPY --from=builder /app/node_modules/bcryptjs ./node_modules/bcryptjs
 COPY --from=builder /app/docker/init.sh ./init.sh
 
 RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
-
+ 
+ # Copy seed database (dev.db → mountain.db)
+ COPY --from=builder /app/prisma/dev.db /app/data/mountain.db
+ RUN chown nextjs:nodejs /app/data/mountain.db
+ 
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000
