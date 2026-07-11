@@ -8,6 +8,7 @@
     "startCommand": "bash railway-start.sh",
     "healthcheckPath": "/",
     "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 10
+    "restartPolicyMaxRetries": 10,
+    "overlapSeconds": 30
   }
 }
