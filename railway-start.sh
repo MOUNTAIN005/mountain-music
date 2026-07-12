@@ -23,3 +23,21 @@ fi
 
 echo "[5/5] Starting Next.js server..."
 exec npx next start -p ${PORT:-3000}
+echo "[3/5] Seeding database..."
+npx prisma db seed 2>&1 || echo "⚠️  seed failed, continuing..."
+
+echo "[4/5] Migrating old /music/ song URLs to /api/uploads/..."
+npx tsx -e "
+import { PrismaClient } from '@prisma/client';
+const p = new PrismaClient();
+async function migrate() {
+  const songs = await p.song.findMany({ where: { audioUrl: { startsWith: '/music/' } } });
+  for (const s of songs) {
+    const newUrl = s.audioUrl.replace('/music/', '/api/uploads/');
+    await p.song.update({ where: { id: s.id }, data: { audioUrl: newUrl } });
+  }
+  if (songs.length > 0) console.log('✅ Fixed ' + songs.length + ' song audio URLs');
+}
+await migrate();
+await p.\$disconnect();
+" 2>&1 || echo "⚠️  URL migration failed, continuing..."
