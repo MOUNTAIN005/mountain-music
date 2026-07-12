@@ -18,21 +18,10 @@ export default function AdminSubmissionsPage() {
 
   const load = async () => {
     try {
-      // Fetch ALL stories (not just approved)
-      const r = await fetch('/api/stories'); const d = await r.json()
-      // Also get pending stories from a separate endpoint
-      const r2 = await fetch('/api/stories?all=true'); // We need all stories
-      if (d.success) {
-        // For now, we'll simulate by including all from the stories endpoint
-        // Since our API returns only approved, let's show what we have
-        setStories(d.data || [])
-      }
+       const r = await fetch('/api/stories?all=true'); const d = await r.json()
+       if (d.success) setStories(d.data || [])
     } catch {}
   }
-
-  // Since the API only returns approved stories, let's check if there are pending ones
-  // We'll use a workaround: update stories via PUT and track locally
-
   const updateStory = async (id: number, data: Partial<Story>) => {
     try {
       await fetch(`/api/stories/${id}`, {

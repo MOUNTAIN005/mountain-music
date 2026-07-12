@@ -27,7 +27,7 @@ async function main() {
     {
       title: '萤火',
       artist: '山影知道',
-      audioUrl: '/music/萤火（Completed）.wav',
+      audioUrl: '/api/uploads/萤火（Completed）.wav',
       description: '黑夜中的微光，是希望的低语',
       genre: '流行',
       duration: 240,
@@ -36,7 +36,7 @@ async function main() {
     {
       title: '边缘',
       artist: '山影知道',
-      audioUrl: '/music/边缘（Completed）.wav',
+      audioUrl: '/api/uploads/边缘（Completed）.wav',
       description: '行走在梦境与现实之间',
       genre: '民谣',
       duration: 210,
@@ -45,7 +45,7 @@ async function main() {
     {
       title: '风要怎么停息',
       artist: '山影知道',
-      audioUrl: '/music/风要怎么停息 (Completed).wav',
+      audioUrl: '/api/uploads/风要怎么停息 (Completed).wav',
       description: '当思念化作无法停止的风',
       genre: '流行',
       duration: 195,
@@ -54,7 +54,7 @@ async function main() {
     {
       title: '我做了个梦',
       artist: '山影知道',
-      audioUrl: '/music/我做了个梦（Completed）.wav',
+      audioUrl: '/api/uploads/我做了个梦（Completed）.wav',
       description: '梦里有一切美好的可能',
       genre: '民谣',
       duration: 225,
@@ -63,7 +63,7 @@ async function main() {
     {
       title: 'Tina',
       artist: '山影知道',
-      audioUrl: '/music/Tina(Completed).wav',
+      audioUrl: '/api/uploads/Tina(Completed).wav',
       description: '献给你，Tina',
       genre: '流行',
       duration: 200,
@@ -72,7 +72,7 @@ async function main() {
     {
       title: '路边角落里的猫',
       artist: '山影知道',
-      audioUrl: '/music/路边角落里的猫（Completed）.wav',
+      audioUrl: '/api/uploads/路边角落里的猫（Completed）.wav',
       description: '城市角落里的温暖相遇',
       genre: '民谣',
       duration: 180,

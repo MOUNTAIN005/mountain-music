@@ -12,7 +12,7 @@ export async function GET() {
 
     const result = files.map(f => {
       const ext = f.split('.').pop()?.toLowerCase() || ''
-      const url = process.env.UPLOAD_DIR ? `/api/uploads/${f}` : `/uploads/${f}`
+      const url = `/api/uploads/${f}`
       return {
         name: f,
         url,

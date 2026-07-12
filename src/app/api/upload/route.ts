@@ -22,8 +22,8 @@ export async function POST(request: Request) {
     const filePath = join(uploadDir, fileName)
     writeFileSync(filePath, buffer)
 
-    // On Railway, serve through API; locally use static files
-    const baseUrl = process.env.UPLOAD_DIR ? `/api/uploads/${fileName}` : `/uploads/${fileName}`
+     // Always serve through the /api/uploads/ route (works in all environments)
+     const baseUrl = `/api/uploads/${fileName}`
 
     return NextResponse.json({ success: true, data: { url: baseUrl, fileName } })
   } catch (error) {

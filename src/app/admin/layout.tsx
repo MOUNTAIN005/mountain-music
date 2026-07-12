@@ -16,6 +16,7 @@ import {
 
 const navItems = [
   { label: '仪表盘', href: '/admin/dashboard', icon: LayoutDashboard },
+   { label: '单曲管理', href: '/admin/songs', icon: Music },
   { label: '创建专辑', href: '/admin/albums', icon: Disc3 },
   { label: 'HERO编辑', href: '/admin/hero', icon: ImageIcon },
   { label: '推荐歌曲编辑', href: '/admin/recommend', icon: Music },
