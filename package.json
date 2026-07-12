@@ -10,7 +10,7 @@
     "dev": "next dev",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "start": "next start"
+    "start": "node .next/standalone/server.js"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

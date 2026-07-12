@@ -62,12 +62,6 @@ export interface Setting {
   value: string
 }
 
-export interface PlayRecord {
-  id: number
-  songId: number
-  ip: string | null
-  createdAt: string
-}
 
 export interface User {
   id: number

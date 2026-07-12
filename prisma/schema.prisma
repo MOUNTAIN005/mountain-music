@@ -51,9 +51,9 @@ model Album {
   updatedAt   DateTime @updatedAt
 }
 
- model RecommendedSong {
-   id          Int      @id @default(autoincrement())
-   title       String
+model RecommendedSong {
+  id          Int      @id @default(autoincrement())
+  title       String
    artist      String   @default("山影知道")
    coverUrl    String?
    audioUrl    String
@@ -97,11 +97,4 @@ model Setting {
   id    Int    @id @default(autoincrement())
   key   String @unique
   value String
-}
-
-model PlayRecord {
-  id        Int      @id @default(autoincrement())
-  songId    Int
-  ip        String?
-  createdAt DateTime @default(now())
 }

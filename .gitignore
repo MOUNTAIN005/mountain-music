@@ -8,6 +8,7 @@ music/
 public/uploads/
 sshpass*
 *.tar.gz
+pnpm-lock.yaml
 
 # Mac files
 .DS_Store

@@ -1,8 +1,8 @@
 
-# MOUNTAIN MUSIC — 建站记录
+# MOUNTAIN MUSIC — 建站记录（2026-07-12 大重构）
 
 > 最后更新：2026-07-12
-> 当前对话：MOUNTAINMUSIC建站聊天3
+> 当前对话：MOUNTAINMUSIC建站聊天4
 
 ## 项目概况
 
@@ -11,7 +11,7 @@
 - **在线地址**: https://mountain-music.up.railway.app
 - **后台地址**: https://mountain-music.up.railway.app/admin/login
 - **源码仓库**: https://github.com/MOUNTAIN005/mountain-music
-- **部署方式**: Railway (Nixpacks builder)
+- **部署方式**: Railway (Railpack — 新版零配置构建)
 
 ## 技术栈
 
@@ -24,7 +24,7 @@
 | Tailwind CSS | 3.4 |
 | Framer Motion | 12.42.2 |
 | Zustand | 5.x |
-| 数据库 | Railway PostgreSQL / 本地 SQLite |
+| 数据库 | Railway PostgreSQL |
 
 ## 管理后台页面
 
@@ -39,43 +39,62 @@
 | /admin/settings | 网站设置 | 对接 API（2026-07-12 重构） |
 | /admin/login | 登录 | JWT 鉴权 |
 
-## 数据库模型
+## 数据库模型（精简后）
 
-User, Song, Album, RecommendedSong, Story, Contact, Setting, PlayRecord
+User, Song, Album, RecommendedSong, Story, Contact, Setting
+(已移除未使用的 PlayRecord)
 
-## 音频策略
+## 音频/文件上传策略
 
 音频统一通过 /api/uploads/ 提供。Railway 需设置 UPLOAD_DIR=/tmp/uploads。
-启动脚本自动复制 music/ 到上传目录并迁移旧 URL。
+Volume 挂载到 /app/uploads（生产环境），本地开发用 public/uploads/。
+start.sh 在启动时自动将 music/ 中的歌曲文件复制到上传目录（仅首次）。
 
-## 本阶段改动 (2026-07-12)
+## Railway 部署架构（最终）
 
-### 已完成
+```
+Railpack build → npm install → npm run build (standalone output)
+         ↓
+Pre-deploy: npx prisma db push && npx prisma db seed
+         ↓
+node .next/standalone/server.js
+```
 
-1. 歌曲管理页 — mock 数据重写为 API CRUD
-2. 网站设置页 — 连接 Settings API 持久化
-3. 导航栏 — 增加「单曲管理」入口
-4. 投稿管理 — 使用 ?all=true
-5. Stories API — 新增 ?all=true
-6. 上传路由 — URL 始终用 /api/uploads/
-7. 种子脚本 — 音频 URL 从 /music/ 改为 /api/uploads/
-8. Railway 启动脚本 — 复制音乐文件 + 迁移旧 URL
-9. framer-motion — 11.x → 12.x 修复 React 19 兼容
-10. 专辑页 — 修复 TypeScript 类型错误
+**关键变更：**
+- 删掉 `railway.json` → 换用 Railpack 自动检测
+- 删掉 `railway-start.sh` → 功能全部由 Pre-deploy Command 替代
+- `next.config.ts` 加 `output: 'standalone'` → 构建输出适配 Railway
+- `package.json` start 改为 `node .next/standalone/server.js`
+- 移除 `@railway/cli` 依赖（不是必须的）
+- PlayRecord 模型已移除（从未使用）
+- 种子脚本精简：只创建管理员 + 网站设置，歌曲和故事通过后台管理界面添加
 
-### 待处理
+## 首次部署：Railway Dashboard 设置步骤
 
-- Railway 自动部署未触发，需检查 Dashboard
-- 仪表盘数据仍是硬编码
-- PlayRecord 模型未使用
-- RecommendedSong 与 Song 独立，可考虑合并
+1. 清空 PostgreSQL 数据库（Reset 数据）
+2. 创建 Volume，挂载到 `/app/uploads`
+3. 添加环境变量 `UPLOAD_DIR=/app/uploads`
+4. 设置 Pre-deploy Command: `npx prisma db push && npx prisma db seed`
+5. 检查 GitHub 自动部署是否启用（Service Settings → Source）
+6. 部署后访问后台 → 添加歌曲和上传音频文件
+7. 如需导入现有 .wav 文件，通过 Railway CLI 上传到 Volume
 
 ## 部署
 
-Railway: GitHub 推 main 触发自动部署，或从 Dashboard 手动部署。
-本地: cp .env.example .env.local, npm install, npx prisma db push, npx next dev
+**生产（Railway）**
+- 推 main → GitHub → Railway 自动部署
+- 首次部署后通过后台界面上传音频文件
+
+**本地开发**
+```
+cp .env.example .env.local
+npm install
+npx prisma db push
+npx prisma db seed
+npm run dev
+```
 
 ## 当前对话
 
-对话名: MOUNTAINMUSIC建站聊天3
-下一个建议: MOUNTAINMUSIC建站聊天4
+对话名: MOUNTAINMUSIC建站聊天4
+下一个建议: Railway Dashboard 设置 + 首次部署
