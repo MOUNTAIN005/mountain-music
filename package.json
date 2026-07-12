@@ -13,7 +13,7 @@
     "setup:local": "prisma generate --schema=prisma/schema.sqlite.prisma && DATABASE_URL=\"file:./dev.db\" prisma db push --schema=prisma/schema.sqlite.prisma",
     "lint": "next lint",
     "postinstall": "prisma generate --schema=prisma/schema.pg.prisma",
-    "start": "node .next/standalone/server.js",
+    "start": "sh start.sh",
     "start:local": "node prisma/prepare-db.js && next start"
   },
   "prisma": {
