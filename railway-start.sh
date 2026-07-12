@@ -38,12 +38,4 @@ await p.\$disconnect();
 " 2>&1 || echo "⚠️  URL migration failed, continuing..."
 
 echo "[5/5] Starting Next.js server..."
-# Copy static files needed for standalone mode
-if [ -d ".next/standalone" ]; then
-  cp -r .next/static .next/standalone/.next/ 2>/dev/null || true
-  cp -r public .next/standalone/ 2>/dev/null || true
-  cd .next/standalone
-  exec node server.js
-else
-  exec npx next start -p ${PORT:-3000}
-fi
+exec npx next start -p ${PORT:-3000}
