@@ -23,15 +23,12 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/.bin ./node_modules/.bin
-COPY --from=builder /app/node_modules/bcryptjs ./node_modules/bcryptjs
-COPY --from=builder /app/node_modules/tsx ./node_modules/tsx
-COPY --from=builder /app/node_modules/esbuild ./node_modules/esbuild
 
+# Copy ALL node_modules from builder (ensures Prisma client and all deps work)
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+
+ENV HOME=/tmp
 USER nextjs
 EXPOSE 3000
 ENV HOSTNAME="0.0.0.0"
-ENV HOME=/tmp
 CMD ["node", "server.js"]
