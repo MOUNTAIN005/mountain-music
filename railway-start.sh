@@ -21,11 +21,6 @@ if [ ! -d "node_modules/.prisma/client" ]; then
   npx prisma generate
 fi
 
-echo "[5/5] Starting Next.js server..."
-exec npx next start -p ${PORT:-3000}
-echo "[3/5] Seeding database..."
-npx prisma db seed 2>&1 || echo "⚠️  seed failed, continuing..."
-
 echo "[4/5] Migrating old /music/ song URLs to /api/uploads/..."
 npx tsx -e "
 import { PrismaClient } from '@prisma/client';
@@ -41,3 +36,14 @@ async function migrate() {
 await migrate();
 await p.\$disconnect();
 " 2>&1 || echo "⚠️  URL migration failed, continuing..."
+
+echo "[5/5] Starting Next.js server..."
+# Copy static files needed for standalone mode
+if [ -d ".next/standalone" ]; then
+  cp -r .next/static .next/standalone/.next/ 2>/dev/null || true
+  cp -r public .next/standalone/ 2>/dev/null || true
+  cd .next/standalone
+  exec node server.js
+else
+  exec npx next start -p ${PORT:-3000}
+fi
