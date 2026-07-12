@@ -5,10 +5,11 @@ import { prisma } from '@/lib/prisma'
    try {
      const url = new URL(request.url)
      const showAll = url.searchParams.get('all') === 'true'
-     const stories = await prisma.story.findMany({
-       where: showAll ? {} : { status: 'approved', isDisplayed: true },
-       orderBy: { createdAt: 'desc' },
-     })
+    const stories = await prisma.story.findMany({
+      where: showAll ? {} : { status: 'approved', isDisplayed: true },
+      orderBy: { createdAt: 'desc' },
+      include: { song: true },
+    })
      return NextResponse.json({ success: true, data: stories })
    } catch (error) {
      console.error('Get stories error:', error)
@@ -27,6 +28,7 @@ export async function POST(request: Request) {
         title: body.title,
         author: body.name,
         content: body.content,
+        imageUrl: body.imageUrl || null,
         submittedBy: body.name,
         submitterEmail: body.email,
         status: 'pending',

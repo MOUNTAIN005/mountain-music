@@ -2,10 +2,14 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Send, Upload, CheckCircle } from 'lucide-react'
+import { Send, Upload, CheckCircle, Loader2 } from 'lucide-react'
+import UploadField from '@/components/UploadField'
 
 export default function SubmitPage() {
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const [imageUrl, setImageUrl] = useState('')
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -15,8 +19,25 @@ export default function SubmitPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: API call
-    setSubmitted(true)
+    setSubmitting(true)
+    setError('')
+    try {
+      const r = await fetch('/api/stories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, imageUrl: imageUrl || null }),
+      })
+      const d = await r.json()
+      if (d.success) {
+        setSubmitted(true)
+      } else {
+        setError(d.error || '投稿失败，请重试')
+      }
+    } catch {
+      setError('投稿失败，请检查网络连接')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   if (submitted) {
@@ -110,22 +131,37 @@ export default function SubmitPage() {
             />
           </div>
 
-          <div>
-            <label className="block text-sm text-gray-400 mb-2">附件上传</label>
-            <div className="border-2 border-dashed border-white/10 rounded-xl p-8 text-center hover:border-accent-purple/30 transition-colors cursor-pointer">
-              <Upload className="w-8 h-8 text-gray-500 mx-auto mb-2" />
-              <p className="text-sm text-gray-500">
-                点击上传图片或文档
-              </p>
-            </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-2">故事配图</label>
+          <UploadField
+            accept="image/*"
+            label="选择图片"
+            onUpload={(url) => setImageUrl(url)}
+            currentUrl={imageUrl}
+            uploadContext="submit"
+            preview
+          />
+          <p className="text-[10px] text-gray-500 mt-1.5">
+            建议 16:9 比例，宽度 1200px，大小 700KB 以内
+          </p>
+        </div>
+
+        {error && (
+          <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            {error}
           </div>
+        )}
 
           <button
             type="submit"
+            disabled={submitting}
             className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-accent-purple to-accent-blue text-white font-medium hover:shadow-lg hover:shadow-accent-purple/25 transition-all"
           >
-            <Send size={18} />
-            提交投稿
+            {submitting ? (
+              <><Loader2 size={18} className="animate-spin" /> 提交中...</>
+            ) : (
+              <><Send size={18} /> 提交投稿</>
+            )}
           </button>
         </motion.form>
       </div>

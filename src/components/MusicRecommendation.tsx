@@ -47,6 +47,7 @@ export default function MusicRecommendation() {
   }, [])
 
   const displaySongs = loaded && songs.length > 0 ? songs.slice(0, 5) : []
+  const showSkeleton = !loaded
 
   const handleCardClick = (song: any) => {
     setSelectedSong(song)
@@ -75,7 +76,7 @@ export default function MusicRecommendation() {
   return (
     <section className="relative py-24 lg:py-32 px-4">
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-accent-purple/[0.02] to-transparent" />
-      <div className="max-w-[1700px] mx-auto relative z-10">
+      <div className="max-w-[1770px] mx-auto relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -87,11 +88,26 @@ export default function MusicRecommendation() {
         </motion.div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 lg:gap-5">
-          {(loaded ? displaySongs : []).map((song, i) => (
-            <button key={song.id} onClick={() => { if (selectedSong) handleBack(); handleCardClick(song) }}
+          {/* Loading skeleton */}
+          {showSkeleton && Array.from({ length: 5 }).map((_, i) => (
+            <div key={`sk-${i}`} className="text-left">
+              <div className="aspect-square rounded-full skeleton-pulse" />
+              <div className="mt-2.5 px-0.5 space-y-1.5">
+                <div className="h-3 w-3/4 skeleton-pulse rounded" />
+                <div className="h-2 w-1/2 skeleton-pulse rounded" />
+              </div>
+            </div>
+          ))}
+          {displaySongs.map((song, i) => (
+            <motion.button
+              key={song.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: i * 0.08 }}
+              onClick={() => { if (selectedSong) handleBack(); handleCardClick(song) }}
               className="group text-left focus:outline-none">
               <div className="aspect-square relative">
-                <div className={`w-full h-full rounded-full bg-gradient-to-b from-gray-800 to-gray-950 flex items-center justify-center shadow-lg ${isThisPlaying(song) ? 'animate-[spin_3s_linear_infinite]' : ''}`}>
+                <div className={`w-full h-full rounded-full bg-gradient-to-b from-gray-800 to-gray-950 flex items-center justify-center shadow-lg transition-shadow duration-300 group-hover:shadow-xl group-hover:shadow-accent-purple/10 ${isThisPlaying(song) ? 'animate-[spin_3s_linear_infinite]' : ''}`}>
                   <div className="absolute w-[90%] h-[90%] rounded-full border border-white/[0.012]" />
                   <div className="absolute w-[84%] h-[84%] rounded-full border border-white/[0.012]" />
                   <div className="w-[90%] h-[90%] rounded-full overflow-hidden shadow-md relative">
@@ -105,29 +121,40 @@ export default function MusicRecommendation() {
                   </div>
                 </div>
                 {(!currentSong || currentSong.id !== song.id) && (
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-400">
-                    <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform">
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-400">
+                    <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform group-hover:bg-white">
                       <Play size={20} className="text-black ml-0.5" />
                     </div>
+                    {/* Description tooltip */}
+                    {song.description && (
+                      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-1 rounded-md bg-black/80 backdrop-blur text-[10px] text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                        {song.description.length > 25 ? song.description.slice(0, 25) + '...' : song.description}
+                      </div>
+                    )}
                   </div>
                 )}
                 {isThisPlaying(song) && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-12 h-12 rounded-full bg-accent-purple/90 flex items-center justify-center shadow-lg">
-                      <div className="flex items-end gap-[2px] h-5">
-                        <div className="w-[3px] rounded-full bg-white animate-bounce" style={{animationDelay:'0ms',height:'60%'}} />
-                        <div className="w-[3px] rounded-full bg-white animate-bounce" style={{animationDelay:'200ms',height:'100%'}} />
-                        <div className="w-[3px] rounded-full bg-white animate-bounce" style={{animationDelay:'400ms',height:'40%'}} />
+                  <div className="absolute inset-0 flex items-center justify-center z-10">
+                    <div className="w-12 h-12 rounded-full bg-accent-purple/90 flex items-center justify-center shadow-lg shadow-accent-purple/20">
+                      <div className="flex items-end gap-[2.5px] h-5">
+                        {[1,2,3].map(j => (
+                          <div key={j} className="w-[3px] rounded-full bg-white"
+                            style={{
+                              height: `${j * 30}%`,
+                              animation: 'sound-wave 0.6s ease-in-out infinite alternate',
+                              animationDelay: `${j * 0.15}s`
+                            }} />
+                        ))}
                       </div>
                     </div>
                   </div>
                 )}
               </div>
               <div className="mt-2.5 px-0.5">
-                <p className="text-xs font-semibold text-white truncate">{song.title}</p>
+                <p className="text-xs font-semibold text-white truncate group-hover:text-accent-purple/90 transition-colors">{song.title}</p>
                 <p className="text-[10px] text-gray-500 truncate mt-0.5">{song.artist}</p>
               </div>
-            </button>
+            </motion.button>
           ))}
         </div>
       </div>

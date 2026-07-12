@@ -2,18 +2,24 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, Quote, Sparkles, X, Clock, ChevronDown, ChevronUp } from 'lucide-react'
+import { Send, Quote, Sparkles, X, Clock, ChevronDown, ChevronUp, BookOpen, Play, Pause } from 'lucide-react'
+import { useAudioPlayer } from '@/hooks/useAudioPlayer'
 
 interface StoryData {
   id: number
   title: string
   author: string
   content: string
+  songTitle?: string | null
+  song?: { audioUrl?: string; title?: string } | null
+  lyrics?: string | null
   createdAt: string
 }
 
 export default function StoriesSection() {
   const [stories, setStories] = useState<StoryData[]>([])
+  const { play, currentSong, isPlaying, pause, resume, currentTime } = useAudioPlayer()
+  const [loaded, setLoaded] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -26,6 +32,7 @@ export default function StoriesSection() {
     fetch('/api/stories')
       .then(r => r.json())
       .then(d => { if (d.success) setStories(d.data || []) })
+      .finally(() => setLoaded(true))
       .catch(() => {})
   }, [])
 
@@ -44,6 +51,31 @@ export default function StoriesSection() {
       setTimeout(() => { setSubmitted(false); setShowForm(false); setFormOpen(false) }, 3000)
     } catch {}
     setSubmitting(false)
+  }
+
+  const isCurrentSong = (story: any) => currentSong?.id === -(1000 + story.id)
+
+  const playStorySong = (story: any) => {
+    if (isCurrentSong(story) && isPlaying) { pause(); return }
+    if (isCurrentSong(story) && !isPlaying) { resume(); return }
+    play({
+      id: -(1000 + story.id),
+      title: story.songTitle || story.title,
+      artist: story.author || '山影知道',
+      coverUrl: null,
+      audioUrl: story.song?.audioUrl || '',
+      lyrics: story.lyrics || '',
+      description: null,
+      genre: null,
+      duration: 0,
+      playCount: 0,
+      likeCount: 0,
+      sortOrder: 0,
+      isPublished: true,
+      albumId: null,
+      createdAt: '',
+      updatedAt: '',
+    })
   }
 
   const formatDate = (d: string) => {
@@ -69,7 +101,7 @@ export default function StoriesSection() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-accent-purple/5 rounded-full blur-[120px]" />
       </div>
 
-      <div className="relative max-w-[1700px] mx-auto px-6">
+      <div className="relative max-w-[1770px] mx-auto px-6">
         {/* Title */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -120,7 +152,7 @@ export default function StoriesSection() {
         </motion.div>
 
         {/* Submission Form - Animated slide down */}
-        <AnimatePresence>
+              <AnimatePresence>
           {showForm && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
@@ -191,49 +223,97 @@ export default function StoriesSection() {
         </AnimatePresence>
 
         {/* Display Stories */}
-        <div className="space-y-5">
-          {stories.length === 0 && (
-            <motion.p
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              className="text-center text-gray-600 text-sm"
-            >还没有故事，来分享第一个吧 ✨</motion.p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Loading skeleton */}
+          {!loaded && Array.from({ length: 2 }).map((_, i) => (
+            <div key={`sk-st-${i}`} className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 aspect-[4/3]">
+              <div className="flex items-start gap-4">
+                <div className="hidden sm:block w-10 h-10 rounded-full skeleton-pulse shrink-0" />
+                <div className="flex-1 space-y-3">
+                  <div className="h-5 w-3/4 skeleton-pulse rounded" />
+                  <div className="h-3 w-1/3 skeleton-pulse rounded" />
+                  <div className="h-4 w-full skeleton-pulse rounded" />
+                  <div className="h-4 w-2/3 skeleton-pulse rounded" />
+                </div>
+              </div>
+            </div>
+          ))}
+          {loaded && stories.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-16"
+            >
+              <BookOpen size={36} className="text-gray-700 mx-auto mb-3" />
+              <p className="text-gray-600 text-sm mb-1">还没有故事</p>
+              <p className="text-gray-700 text-xs">来分享第一个吧 ✨</p>
+            </motion.div>
           )}
           <AnimatePresence>
-            {stories.map((story, idx) => (
+            {loaded && stories.slice(0, 4).map((story, idx) => (
               <motion.div
                 key={story.id}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: Math.min(idx * 0.1, 0.5) }}
-                className="group p-6 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all duration-500"
+                className="group relative p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] hover:border-white/10 hover:shadow-lg hover:shadow-accent-purple/[0.05] hover:-translate-y-0.5 transition-all duration-300 aspect-[4/3] flex flex-col"
               >
-                <div className="flex items-start gap-4">
+                {/* Left accent bar */}
+                <div className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full bg-gradient-to-b from-accent-purple to-accent-blue opacity-0 group-hover:opacity-100 transition-all duration-500" />
+
+                <div className="flex flex-1 flex-col gap-3">
+                <div className="flex items-start gap-4 flex-1">
                   {/* Quote icon */}
-                  <div className="hidden sm:flex w-10 h-10 rounded-full bg-gradient-to-br from-accent-purple/20 to-accent-blue/20 items-center justify-center shrink-0 mt-1">
-                    <Quote size={18} className="text-accent-purple/60" />
+                  <div className="hidden sm:flex w-8 h-8 rounded-lg bg-gradient-to-br from-accent-purple/25 to-accent-blue/25 items-center justify-center shrink-0 mt-0.5 group-hover:from-accent-purple/40 group-hover:to-accent-blue/40 transition-all duration-300">
+                    <Quote size={12} className="text-accent-purple/70 group-hover:text-accent-purple transition-colors duration-300" />
                   </div>
 
                   <div className="flex-1 min-w-0">
                     {/* Title */}
-                    <h3 className="text-white font-semibold text-base mb-1.5 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-accent-purple group-hover:to-accent-blue transition-all duration-300">
+                    <h3 className="text-white font-semibold text-sm mb-1 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-accent-purple group-hover:to-accent-blue transition-all duration-300">
                       {story.title}
                     </h3>
 
                     {/* Meta */}
-                    <div className="flex items-center gap-3 mb-3 text-[11px] text-gray-500">
+                    <div className="flex items-center gap-2 mb-2 text-[10px] text-gray-500">
                       <span className="text-gray-400">{story.author}</span>
                       <span className="w-1 h-1 rounded-full bg-gray-700" />
                       <span className="flex items-center gap-1"><Clock size={10} />{formatDate(story.createdAt)}</span>
                     </div>
 
                     {/* Content */}
-                    <p className="text-gray-400 text-sm leading-relaxed line-clamp-3 group-hover:line-clamp-none transition-all duration-500">
+                    <p className="text-gray-400 text-xs leading-relaxed line-clamp-4 group-hover:line-clamp-none transition-all duration-500">
                       {story.content}
                     </p>
                   </div>
+                </div>
+                  {/* Play button + song info */}
+          {story.songTitle && (
+                    <div className="mt-auto pt-3 border-t border-white/5 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => { e.preventDefault(); playStorySong(story) }}
+                          className="w-7 h-7 rounded-full bg-accent-purple/80 flex items-center justify-center shrink-0 hover:bg-accent-purple hover:shadow-lg hover:shadow-accent-purple/20 transition-all"
+                        >
+                          {isCurrentSong(story) && isPlaying ? (
+                            <Pause size={11} className="text-white" />
+                          ) : (
+                            <Play size={11} className="text-white ml-0.5" />
+                          )}
+                        </button>
+                        <span className="text-[11px] text-gray-300 truncate flex-1 min-w-0 font-medium">{story.songTitle}</span>
+                      </div>
+                      {story.lyrics && (
+                        <p className="text-[10px] text-gray-500 truncate pl-9">
+                          {(() => {
+                            const firstLine = story.lyrics?.split('\n')[0] || '';
+                            return firstLine.replace(/^\[\d+:\d+[\.\d]*\]\s*/, '');
+                          })()}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ))}

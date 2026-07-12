@@ -103,3 +103,15 @@ model Setting {
   key   String @unique
   value String
 }
+
+model SocialLink {
+  id          Int      @id @default(autoincrement())
+  platform    String   @unique
+  name        String
+  accountName String   @default("")
+  qrCodeUrl   String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

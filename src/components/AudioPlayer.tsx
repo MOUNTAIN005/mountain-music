@@ -145,7 +145,7 @@ export default function AudioPlayer() {
               </div>
             </div>
 
-            <div className="mx-auto max-w-7xl px-4 h-20 flex items-center justify-between gap-4">
+            <div className="mx-auto max-w-[1770px] px-4 h-20 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <div className="w-12 h-12 rounded-lg bg-white/5 flex-shrink-0 overflow-hidden flex items-center justify-center">
                   {currentSong.coverUrl ? (

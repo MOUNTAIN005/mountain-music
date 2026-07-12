@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Play, ChevronLeft, Disc3, Music } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Play, ChevronLeft, Disc3, Music, DiscAlbum } from 'lucide-react'
 import { useAudioPlayer } from '@/hooks/useAudioPlayer'
 
 const apiFileUrl = (url: string | null | undefined) => {
@@ -42,22 +43,51 @@ export default function AlbumSection() {
   }, [])
 
   const displayAlbums = loaded ? albums : []
+  const showSkeleton = !loaded
   const handleBack = () => { setSelectedKey(null); if (isPlaying) pause() }
 
   return (
     <section className="relative py-20 lg:py-28 px-4">
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-accent-blue/[0.02] to-transparent" />
-      <div className="max-w-[1700px] mx-auto relative z-10">
-        <div className="mb-10 lg:mb-14">
+      <div className="max-w-[1770px] mx-auto relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-10 lg:mb-14"
+        >
           <p className="text-xs uppercase tracking-[0.2em] text-accent-blue/60 mb-2">ALBUM</p>
           <h2 className="text-3xl lg:text-4xl font-bold text-white">精选专辑推荐</h2>
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+          {/* Loading skeleton */}
+          {showSkeleton && Array.from({ length: 2 }).map((_, i) => (
+            <div key={`sk-al-${i}`} className="rounded-2xl overflow-hidden glass min-h-[300px]">
+              <div className="grid grid-cols-2 h-full">
+                <div className="p-5 space-y-4">
+                  <div className="h-4 w-3/4 skeleton-pulse" />
+                  <div className="space-y-2">
+                    {[1,2,3].map(j => <div key={j} className="h-8 skeleton-pulse rounded-xl" />)}
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="w-full aspect-square rounded-xl skeleton-pulse" />
+                </div>
+              </div>
+            </div>
+          ))}
           {loaded && displayAlbums.length === 0 && (
-            <div className="col-span-full text-center py-12"><p className="text-gray-600 text-sm">暂无专辑数据</p></div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="col-span-full text-center py-12"
+            >
+              <DiscAlbum size={40} className="text-gray-700 mx-auto mb-3" />
+              <p className="text-gray-600 text-sm">暂无专辑数据</p>
+            </motion.div>
           )}
-          {displayAlbums.slice(0, 2).map((album, ai) => {
+          {loaded && displayAlbums.slice(0, 2).map((album, ai) => {
             const isSelected = selectedKey?.startsWith(`${album.id}-`)
             const songId = isSelected ? Number(selectedKey?.split('-')[1]) : null
             const song = songId ? album.songs?.find((s: any) => s.id === songId) : null
@@ -66,10 +96,17 @@ export default function AlbumSection() {
               ? lyrLines.findLastIndex(l => currentTime >= l.time) : -1
 
             return (
-              <div key={album.id} className="rounded-2xl overflow-hidden glass min-h-[300px]">
-                {!isSelected ? (
-                  <div className="grid grid-cols-2 h-full">
-                    <div className="p-5 flex flex-col justify-start">
+              <motion.div
+                key={album.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: ai * 0.15 }}
+                className="rounded-2xl overflow-hidden glass min-h-[300px]"
+              >
+               {!isSelected ? (
+                 <div className="grid grid-cols-2 h-full">
+                   <div className="p-5 flex flex-col justify-start">
                       <h3 className="text-base font-semibold text-white mb-4 truncate">
                         <span className="text-gray-400 font-normal text-sm">专辑名：</span>{album.title}
                       </h3>
@@ -154,7 +191,7 @@ export default function AlbumSection() {
                     </div>
                   </div>
                 ) : null}
-              </div>
+              </motion.div>
             )
           })}
         </div>

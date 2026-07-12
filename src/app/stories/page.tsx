@@ -1,44 +1,29 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { BookOpen, Calendar, User } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { BookOpen, Calendar, User, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { formatDate } from '@/lib/utils'
 import type { Story } from '@/types'
 
-const mockStories: Story[] = [
-  {
-    id: 1,
-    title: '《萤火》——黑夜中的微光',
-    author: '山影知道',
-    content: '这首歌写于一个失眠的深夜。那时我独自坐在窗前，看着远处零星的路灯，想起了小时候在乡下看到的萤火虫。\n\n那些微小的光亮，虽然不足以照亮整个世界，但足以温暖一个人的心。\n\n我想，每个人的生命中都有这样的时刻——觉得自己渺小如萤火，但也正是这些微光，汇聚成了我们继续前行的力量。',
-    imageUrl: null,
-    status: 'approved',
-    submittedBy: null,
-    submitterEmail: null,
-    attachmentUrl: null,
-    createdAt: '2024-06-15',
-    updatedAt: '2024-06-15',
-  },
-  {
-    id: 2,
-    title: '《边缘》——在梦与醒之间',
-    author: '山影知道',
-    content: '边缘，是一个很特别的位置。\n\n它既不属于这边，也不属于那边。就像半梦半醒之间，你能感受到两个世界的气息。\n\n这首歌想要表达的，就是这种游离的状态。在现实与理想之间，在喧嚣与宁静之间，在坚持与放弃之间...\n\n每一个选择，都让我们站在新的边缘。',
-    imageUrl: null,
-    status: 'approved',
-    submittedBy: null,
-    submitterEmail: null,
-    attachmentUrl: null,
-    createdAt: '2024-07-01',
-    updatedAt: '2024-07-01',
-  },
-]
-
 export default function StoriesPage() {
+  const [stories, setStories] = useState<Story[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/stories')
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) setStories(d.data || [])
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
   return (
     <div className="min-h-screen pt-24 pb-24 px-4">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-[1770px] mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -58,8 +43,19 @@ export default function StoriesPage() {
         </motion.div>
 
         {/* Stories list */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {mockStories.map((story, index) => (
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 size={32} className="text-gray-600 animate-spin" />
+          </div>
+        ) : stories.length === 0 ? (
+          <div className="text-center py-20">
+            <BookOpen size={48} className="text-gray-700 mx-auto mb-4" />
+            <p className="text-gray-500 text-lg mb-2">还没有故事</p>
+            <p className="text-gray-600 text-sm">等审核通过的故事展示在这里</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {stories.map((story, index) => (
             <motion.article
               key={story.id}
               initial={{ opacity: 0, y: 30 }}
@@ -105,7 +101,8 @@ export default function StoriesPage() {
               </Link>
             </motion.article>
           ))}
-        </div>
+          </div>
+        )}
 
         {/* Submit CTA */}
         <motion.div

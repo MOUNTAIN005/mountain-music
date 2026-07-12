@@ -3,14 +3,18 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "next build",
+    "build": "node prisma/prepare-db.js && next build",
     "db:push": "prisma db push",
+    "db:push:local": "prisma generate --schema=prisma/schema.sqlite.prisma && DATABASE_URL=\"file:./dev.db\" prisma db push --schema=prisma/schema.sqlite.prisma",
     "db:seed": "prisma db seed",
+    "db:seed:local": "DATABASE_URL=\"file:./dev.db\" prisma db seed --schema=prisma/schema.sqlite.prisma",
     "db:studio": "prisma studio",
-    "dev": "next dev",
+    "dev": "node prisma/prepare-db.js && next dev",
+    "setup:local": "prisma generate --schema=prisma/schema.sqlite.prisma && DATABASE_URL=\"file:./dev.db\" prisma db push --schema=prisma/schema.sqlite.prisma",
     "lint": "next lint",
-    "postinstall": "prisma generate",
-    "start": "node .next/standalone/server.js"
+    "postinstall": "prisma generate --schema=prisma/schema.pg.prisma",
+    "start": "node .next/standalone/server.js",
+    "start:local": "node prisma/prepare-db.js && next start"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

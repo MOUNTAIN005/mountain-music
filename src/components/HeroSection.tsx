@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Play, Pause } from 'lucide-react'
+import { Play, Pause, ChevronDown, Music2 } from 'lucide-react'
 import { useAudioPlayer } from '@/hooks/useAudioPlayer'
 import type { Song } from '@/types'
 
@@ -19,6 +19,14 @@ export default function HeroSection() {
   const { play, currentSong, isPlaying, pause, resume, currentTime } = useAudioPlayer()
   const [heroData, setHeroData] = useState<any>(null)
   const [loaded, setLoaded] = useState(false)
+  const [scrollY, setScrollY] = useState(0)
+
+  // Parallax background effect
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY)
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
 
   useEffect(() => {
@@ -27,7 +35,7 @@ export default function HeroSection() {
     }).finally(() => setLoaded(true))
   }, [])
 
-  const song = loaded && heroData ? {
+  const song = loaded && heroData && heroData.audioUrl ? {
     id: -999,
     title: heroData.title || '',
     artist: heroData.artist || '山影知道',
@@ -74,19 +82,42 @@ export default function HeroSection() {
   if (!song) return (
     <section className="relative w-full aspect-video max-h-screen overflow-hidden">
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-110" style={{ backgroundImage: `url(${bgImage})` }} />
+        <div className="absolute inset-0 bg-[#080808]" />
         <div className="absolute inset-0 bg-black/40 backdrop-blur-[8px]" />
         <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-[#080808] via-[#080808]/60 to-transparent" />
         <div className="absolute inset-x-0 top-0 h-1/4 bg-gradient-to-b from-[#080808]/80 via-[#080808]/30 to-transparent" />
       </div>
+      {/* Empty state content */}
+      <div className="relative z-10 w-full h-full flex flex-col items-center justify-center px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-center"
+        >
+          <Music2 size={48} className="text-white/10 mx-auto mb-6" style={{ animation: 'float-note 3s ease-in-out infinite' }} />
+          <h1 className="text-5xl sm:text-7xl lg:text-8xl font-bold text-gradient-animated mb-4 text-breath-glow">
+            MOUNTAIN MUSIC
+          </h1>
+          <p className="text-base sm:text-lg text-gray-500 max-w-md mx-auto mt-20 tracking-[0.5em]">
+            让声音记录灵魂
+          </p>
+        </motion.div>
+      </div>
     </section>
   )
 
-  return (
+ return (
+    <>
     <section className="relative w-full aspect-video max-h-screen overflow-hidden">
       {/* Background */}
-<div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-110" style={{ backgroundImage: `url(${bgImage})` }} />
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-110 will-change-transform"
+          style={{
+            backgroundImage: `url(${bgImage})`,
+            transform: `translateY(${scrollY * 0.15}px)`,
+          }}
+        />
         <div className="absolute inset-0 bg-black/40 backdrop-blur-[8px]" />
         <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-[#080808] via-[#080808]/60 to-transparent" />
         <div className="absolute inset-x-0 top-0 h-1/4 bg-gradient-to-b from-[#080808]/80 via-[#080808]/30 to-transparent" />
@@ -101,7 +132,7 @@ export default function HeroSection() {
 
       {/* Content */}
       <div className="relative z-10 w-full h-full flex items-center px-6 lg:px-16">
-        <div className="w-full max-w-[1700px] mx-auto flex items-center gap-8 lg:gap-16">
+        <div className="w-full max-w-[1770px] mx-auto flex items-center gap-8 lg:gap-16">
           {/* Album cover */}
           <motion.div className="flex-shrink-0"
             initial={{ opacity: 0, x: -40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }}>
@@ -179,5 +210,16 @@ export default function HeroSection() {
         </div>
     </div>
     </section>
+    {/* Scroll-down indicator */}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 1.5, duration: 1 }}
+      className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1 pointer-events-none"
+    >
+      <span className="text-[10px] text-white/30 tracking-[0.15em] uppercase">Scroll</span>
+      <ChevronDown size={16} className="text-white/40" style={{ animation: 'bounce-subtle 2s ease-in-out infinite' }} />
+    </motion.div>
+    </>
   )
 }

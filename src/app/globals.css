@@ -197,3 +197,52 @@ body {
 .animate-gradient-x {
   animation: gradient-x 3s ease infinite;
 }
+
+/* Scroll indicator bounce */
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); opacity: 0.6; }
+  50% { transform: translateY(8px); opacity: 1; }
+}
+
+/* Fade-in-up animation for section entrances */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Shimmer loading */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-pulse {
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+/* Music note floating animation */
+@keyframes float-note {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  20% { opacity: 0.15; }
+  80% { opacity: 0.15; }
+  100% { transform: translateY(-120px) rotate(20deg); opacity: 0; }
+}
+
+/* Breath glow for MOUNTAIN MUSIC title */
+@keyframes breath-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 30px rgba(59, 130, 246, 0.35)) drop-shadow(0 0 80px rgba(59, 130, 246, 0.15)) drop-shadow(0 0 150px rgba(59, 130, 246, 0.08));
+    opacity: 0.75;
+  }
+  50% {
+    filter: drop-shadow(0 0 40px rgba(180, 200, 255, 0.5)) drop-shadow(0 0 100px rgba(59, 130, 246, 0.35)) drop-shadow(0 0 300px rgba(100, 150, 255, 0.15));
+    opacity: 1;
+  }
+}
+
+.text-breath-glow {
+  animation: breath-glow 3s ease-in-out infinite;
+}

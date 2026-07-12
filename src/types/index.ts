@@ -13,7 +13,28 @@ export interface Song {
   sortOrder: number
   isPublished: boolean
   albumId: number | null
-  album?: Album | null
+  album?: { id: number; title: string } | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Story {
+  id: number
+  title: string
+  author: string
+  content: string
+  imageUrl: string | null
+  status?: string
+  isRead?: boolean
+  isDisplayed?: boolean
+  isFeatured?: boolean
+  songId?: number | null
+  songTitle?: string | null
+  lyrics?: string | null
+  song?: { id: number; title: string; artist: string; audioUrl: string; lyrics: string | null; coverUrl: string | null; album?: { title: string } | null } | null
+  submittedBy: string | null
+  submitterEmail: string | null
+  attachmentUrl: string | null
   createdAt: string
   updatedAt: string
 }
@@ -29,68 +50,4 @@ export interface Album {
   songs: Song[]
   createdAt: string
   updatedAt: string
-}
-
-export interface Story {
-  id: number
-  title: string
-  author: string
-  content: string
-  imageUrl: string | null
-  status: string
-  submittedBy: string | null
-  submitterEmail: string | null
-  attachmentUrl: string | null
-  createdAt: string
-  updatedAt: string
-}
-
-export interface Contact {
-  id: number
-  name: string
-  email: string
-  subject: string | null
-  message: string
-  isRead: boolean
-  createdAt: string
-  updatedAt: string
-}
-
-export interface Setting {
-  id: number
-  key: string
-  value: string
-}
-
-
-export interface User {
-  id: number
-  email: string
-  name: string
-  role: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface ApiResponse<T = unknown> {
-  success: boolean
-  data?: T
-  message?: string
-  error?: string
-}
-
-export interface PaginatedResponse<T> extends ApiResponse<T[]> {
-  total: number
-  page: number
-  pageSize: number
-}
-
-export interface PlayerState {
-  currentSong: Song | null
-  playlist: Song[]
-  isPlaying: boolean
-  volume: number
-  currentTime: number
-  duration: number
-  isMuted: boolean
 }

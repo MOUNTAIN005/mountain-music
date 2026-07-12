@@ -2,19 +2,31 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Mail, Check, X, Heart, Eye, Trash2, ArrowLeft, Star } from 'lucide-react'
+import { Mail, Check, X, Heart, Eye, Trash2, ArrowLeft, Star, BookOpen, Save, CheckCircle } from 'lucide-react'
+import UploadField from '@/components/UploadField'
 
 interface Story {
   id: number; title: string; author: string; content: string; status: string
   isRead: boolean; isDisplayed: boolean; isFeatured: boolean
+  imageUrl?: string | null
+  songId?: number | null
+  songTitle?: string | null
+  lyrics?: string | null
   submittedBy: string | null; submitterEmail: string | null; createdAt: string
 }
 
 export default function AdminSubmissionsPage() {
   const [stories, setStories] = useState<Story[]>([])
   const [selected, setSelected] = useState<Story | null>(null)
+  const [allSongs, setAllSongs] = useState<any[]>([])
+  const [showToast, setShowToast] = useState(false)
+  const [songEdit, setSongEdit] = useState({ songId: null as number | null, songTitle: '', lyrics: '' })
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load(); fetch('/api/songs').then(r => r.json()).then(d => { if (d.success) setAllSongs(d.data || []) }).catch(() => {}) }, [])
+
+  useEffect(() => {
+    if (selected) setSongEdit({ songId: selected.songId ?? null, songTitle: selected.songTitle || '', lyrics: selected.lyrics || '' })
+  }, [selected])
 
   const load = async () => {
     try {
@@ -74,6 +86,61 @@ export default function AdminSubmissionsPage() {
               <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">{selected.content}</p>
             </div>
 
+            {/* Story image */}
+            <div className="space-y-2 pt-1">
+              <h3 className="text-xs font-semibold text-white/80 uppercase tracking-wider">故事配图</h3>
+              <UploadField
+                accept="image/*"
+                label={selected.imageUrl ? '更换图片' : '选择图片'}
+                onUpload={(url) => {
+                  updateStory(selected.id, { imageUrl: url });
+                  setSelected(s => s ? { ...s, imageUrl: url } : null);
+                  setShowToast(true);
+                  setTimeout(() => setShowToast(false), 3000);
+                }}
+                currentUrl={selected.imageUrl || ''}
+                oldFileUrl={selected.imageUrl || ''}
+                preview
+              />
+              <p className="text-[10px] text-gray-600 mt-1">
+                建议 16:9 比例，宽度 1200px，500KB 以内
+              </p>
+            </div>
+
+            {/* Song information */}
+            <div className="space-y-3 pt-1">
+              <h3 className="text-xs font-semibold text-white/80 uppercase tracking-wider">关联歌曲</h3>
+              <select value={songEdit.songId ?? ''} onChange={e => {
+                const sid = e.target.value ? Number(e.target.value) : null;
+                const song = sid ? allSongs.find(s => s.id === sid) : null;
+                setSongEdit(f => ({ ...f, songId: sid, songTitle: song?.title || '', lyrics: song?.lyrics || '' }));
+              }} className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-accent-purple/50 appearance-none">
+                <option value="">无关联歌曲</option>
+                {allSongs.map(s => <option key={s.id} value={s.id}>{s.album?.title ? s.album.title + ' - ' : ''}{s.title}</option>)}
+              </select>
+              <input value={songEdit.songTitle || ''} onChange={e => {
+                setSongEdit(f => ({ ...f, songTitle: e.target.value }));
+              }} className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-accent-purple/50" placeholder="歌曲名称" />
+
+              {/* Save button */}
+              <div className="flex items-center gap-2">
+                <button onClick={() => {
+                  updateStory(selected.id, songEdit);
+                  setSelected(s => s ? { ...s, ...songEdit } : null);
+                  setShowToast(true);
+                  setTimeout(() => setShowToast(false), 3000);
+                }} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-accent-purple to-accent-blue text-white text-xs font-medium hover:shadow-lg transition-all">
+                  <Save size={14} />保存歌曲信息
+                </button>
+                {showToast && (
+                  <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px]">
+                    <CheckCircle size={12} />保存成功
+                  </motion.div>
+                )}
+              </div>
+            </div>
+
             {/* Actions */}
             <div className="flex flex-wrap items-center gap-3 pt-2">
               {/* Mark as read */}
@@ -124,61 +191,54 @@ export default function AdminSubmissionsPage() {
           </div>
         </div>
       ) : (
-        /* List View */
-        <div className="rounded-xl glass overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-white/5">
-                  <th className="text-left p-3 text-[10px] text-gray-500 font-medium">状态</th>
-                  <th className="text-left p-3 text-[10px] text-gray-500 font-medium">标题</th>
-                  <th className="text-left p-3 text-[10px] text-gray-500 font-medium hidden sm:table-cell">作者</th>
-                  <th className="text-left p-3 text-[10px] text-gray-500 font-medium hidden sm:table-cell">时间</th>
-                  <th className="text-left p-3 text-[10px] text-gray-500 font-medium">显示</th>
-                  <th className="text-left p-3 text-[10px] text-gray-500 font-medium">优秀</th>
-                  <th className="text-right p-3 text-[10px] text-gray-500 font-medium">操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stories.length === 0 && (
-                  <tr><td colSpan={7} className="p-8 text-center text-sm text-gray-600">暂无投稿</td></tr>
-                )}
-                {stories.map((s, i) => (
-                  <motion.tr key={s.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
-                    className={`border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer ${!s.isRead ? 'bg-accent-purple/[0.02]' : ''}`}
-                    onClick={() => { setSelected(s); if (!s.isRead) updateStory(s.id, { isRead: true }) }}>
-                    <td className="p-3">
-                      <span className={`inline-block w-2 h-2 rounded-full ${
-                        s.status === 'approved' ? 'bg-emerald-400' :
-                        s.status === 'rejected' ? 'bg-red-400' : 'bg-amber-400'
-                      }`} />
-                    </td>
-                    <td className="p-3">
-                      <div className="flex items-center gap-2">
-                        {!s.isRead && <span className="w-1.5 h-1.5 rounded-full bg-accent-purple" />}
-                        <span className="text-xs text-white truncate max-w-[160px]">{s.title}</span>
-                      </div>
-                    </td>
-                    <td className="p-3 text-xs text-gray-500 hidden sm:table-cell">{s.author}</td>
-                    <td className="p-3 text-[10px] text-gray-600 hidden sm:table-cell tabular-nums">{new Date(s.createdAt).toLocaleDateString('zh-CN')}</td>
-                    <td className="p-3">
-                      {s.isDisplayed ? <Check size={14} className="text-emerald-400" /> : <X size={14} className="text-gray-600" />}
-                    </td>
-                    <td className="p-3">
-                      {s.isFeatured ? <Heart size={14} className="text-red-400" fill="#f43f5e" /> : <Heart size={14} className="text-gray-600" />}
-                    </td>
-                    <td className="p-3 text-right">
-                      <button onClick={e => { e.stopPropagation(); setSelected(s); if (!s.isRead) updateStory(s.id, { isRead: true }) }}
-                        className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-white transition-colors">
-                        <Eye size={14} />
-                      </button>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
+        /* Card Grid */
+        <>
+          {stories.length === 0 && (
+            <div className="text-center py-16">
+              <BookOpen size={40} className="text-gray-700 mx-auto mb-3" />
+              <p className="text-gray-600 text-sm">暂无投稿</p>
+            </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {stories.map((s, i) => (
+              <motion.div
+                key={s.id}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: i * 0.04 }}
+                className={`group relative p-4 rounded-xl glass border transition-all duration-300 cursor-pointer ${!s.isRead ? 'border-accent-purple/20 bg-accent-purple/[0.03] hover:border-accent-purple/30' : 'border-white/5 hover:border-white/10 hover:shadow-lg hover:shadow-accent-purple/[0.02]'}`}
+                onClick={() => { setSelected(s); if (!s.isRead) updateStory(s.id, { isRead: true }) }}
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className={`inline-block w-2 h-2 rounded-full shrink-0 ${s.status === 'approved' ? 'bg-emerald-400' : s.status === 'rejected' ? 'bg-red-400' : 'bg-amber-400'}`} />
+                    {!s.isRead && <span className="w-1.5 h-1.5 rounded-full bg-accent-purple animate-pulse" />}
+                  </div>
+                  <button onClick={e => { e.stopPropagation(); setSelected(s); if (!s.isRead) updateStory(s.id, { isRead: true }) }}
+                    className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-white transition-colors opacity-0 group-hover:opacity-100">
+                    <Eye size={14} />
+                  </button>
+                </div>
+                <h3 className="text-sm font-semibold text-white mb-0.5 truncate">{s.title}</h3>
+                <div className="flex items-center gap-2 text-[10px] text-gray-500 mb-2">
+                  <span>{s.author}</span>
+                  <span className="w-1 h-1 rounded-full bg-gray-700" />
+                  <span>{new Date(s.createdAt).toLocaleDateString('zh-CN')}</span>
+                </div>
+                <p className="text-xs text-gray-400 leading-relaxed line-clamp-2 mb-2">
+                  {s.content}
+                </p>
+                <div className="flex items-center gap-2 text-[10px] text-gray-600">
+                  {s.isDisplayed && <span className="flex items-center gap-1"><Check size={10} className="text-emerald-400" />显示</span>}
+                  {s.isFeatured && <span className="flex items-center gap-1"><Heart size={10} className="text-red-400" fill="#f43f5e" />优秀</span>}
+                  <span className={`px-1.5 py-0.5 rounded text-[9px] border ${s.status === 'approved' ? 'border-emerald-500/20 text-emerald-400' : s.status === 'rejected' ? 'border-red-500/20 text-red-400' : 'border-amber-500/20 text-amber-400'}`}>
+                    {s.status === 'approved' ? '通过' : s.status === 'rejected' ? '拒绝' : '待审'}
+                  </span>
+                </div>
+              </motion.div>
+            ))}
           </div>
-        </div>
+        </>
       )}
     </div>
   )

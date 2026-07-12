@@ -3,25 +3,16 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import {
-  LayoutDashboard,
-  Disc3,
-  Image as ImageIcon,
-  Music,
-  FileText,
-  Settings,
-  Menu,
-  X,
-} from 'lucide-react'
+import { LayoutDashboard, Disc3, Image as ImageIcon, Music, FileText, Settings, Share2, Menu, X } from 'lucide-react'
 
 const navItems = [
   { label: '仪表盘', href: '/admin/dashboard', icon: LayoutDashboard },
-   { label: '单曲管理', href: '/admin/songs', icon: Music },
   { label: '创建专辑', href: '/admin/albums', icon: Disc3 },
   { label: 'HERO编辑', href: '/admin/hero', icon: ImageIcon },
   { label: '推荐歌曲编辑', href: '/admin/recommend', icon: Music },
   { label: '审核投稿', href: '/admin/submissions', icon: FileText },
-  { label: '网站设置', href: '/admin/settings', icon: Settings },
+  { label: '社交平台', href: '/admin/socials', icon: Share2 },
+  { label: '管理员信息', href: '/admin/settings', icon: Settings },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
