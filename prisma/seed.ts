@@ -6,6 +6,16 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('Seeding database...')
 
+  // Clear all existing data for a fresh start
+  console.log('Clearing existing data...')
+  await prisma.song.deleteMany()
+  await prisma.album.deleteMany()
+  await prisma.recommendedSong.deleteMany()
+  await prisma.story.deleteMany()
+  await prisma.contact.deleteMany()
+  await prisma.setting.deleteMany()
+  console.log('Existing data cleared')
+
   // Create admin user (idempotent)
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@mountainmusic.com'
   const adminPassword = process.env.ADMIN_PASSWORD || 'admin123456'
