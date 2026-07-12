@@ -1,25 +1,29 @@
 import { NextResponse } from 'next/server'
-import { readdirSync, statSync } from 'fs'
+import { readdirSync, statSync, existsSync } from 'fs'
 import { join } from 'path'
 
 export async function GET() {
   const uploadDir = process.env.UPLOAD_DIR || join(process.cwd(), 'public', 'uploads')
 
   try {
-    const files = readdirSync(uploadDir).filter(f =>
-      f.match(/\.(wav|mp3|flac|ogg|aac|m4a|jpg|jpeg|png|webp|gif)$/i)
-    )
+    const result: { name: string; url: string; size: number; ext: string; type: string }[] = []
 
-    const result = files.map(f => {
-      const ext = f.split('.').pop()?.toLowerCase() || ''
-      const url = `/api/uploads/${f}`
-      return {
-        name: f,
-        url,
-        size: statSync(join(uploadDir, f)).size,
-        ext,
+    for (const subDir of ['images', 'audio']) {
+      const dirPath = join(uploadDir, subDir)
+      if (!existsSync(dirPath)) continue
+
+      const files = readdirSync(dirPath)
+      for (const f of files) {
+        const ext = f.split('.').pop()?.toLowerCase() || ''
+        result.push({
+          name: f,
+          url: `/api/uploads/${subDir}/${f}`,
+          size: statSync(join(dirPath, f)).size,
+          ext,
+          type: subDir,
+        })
       }
-    })
+    }
 
     return NextResponse.json({ success: true, data: result })
   } catch {

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { writeFileSync, mkdirSync } from 'fs'
 import { join } from 'path'
 
+const AUDIO_EXTS = /\.(mp3|wav|flac|ogg|aac|m4a)$/i
+
 export async function POST(request: Request) {
   try {
     const formData = await request.formData()
@@ -14,18 +16,20 @@ export async function POST(request: Request) {
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
-    // Use /tmp/uploads/ on Railway, public/uploads/ locally
-    const uploadDir = process.env.UPLOAD_DIR || join(process.cwd(), 'public', 'uploads')
+    // Detect file type: audio or image
+    const isAudio = file.type.startsWith('audio/') || AUDIO_EXTS.test(file.name)
+    const subDir = isAudio ? 'audio' : 'images'
+
+    const baseDir = process.env.UPLOAD_DIR || join(process.cwd(), 'public', 'uploads')
+    const uploadDir = join(baseDir, subDir)
     mkdirSync(uploadDir, { recursive: true })
 
     const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
-    const filePath = join(uploadDir, fileName)
-    writeFileSync(filePath, buffer)
+    writeFileSync(join(uploadDir, fileName), buffer)
 
-     // Always serve through the /api/uploads/ route (works in all environments)
-     const baseUrl = `/api/uploads/${fileName}`
+    const url = `/api/uploads/${subDir}/${fileName}`
 
-    return NextResponse.json({ success: true, data: { url: baseUrl, fileName } })
+    return NextResponse.json({ success: true, data: { url, fileName, type: subDir } })
   } catch (error) {
     console.error('Upload error:', error)
     return NextResponse.json({ success: false, error: '上传失败' }, { status: 500 })
