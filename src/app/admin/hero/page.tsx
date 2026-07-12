@@ -11,7 +11,15 @@ export default function AdminHeroPage() {
 
   useEffect(() => {
     fetch('/api/settings').then(r => r.json()).then(d => {
-      if (d.success && d.data?.hero_data) { try { setData(JSON.parse(d.data.hero_data)) } catch {} }
+      if (d.success && d.data?.hero_data) { 
+        try { 
+          const parsed = JSON.parse(d.data.hero_data)
+          // Only use parsed data if it's a valid object
+          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            setData(parsed)
+          }
+        } catch {} 
+      }
     })
     fetch('/api/uploads/list').then(r => r.json()).then(d => {
       if (d.success) setAudioFiles(d.data.filter((f: any) => f.ext?.match(/wav|mp3|flac|ogg/)))
