@@ -211,14 +211,14 @@ export default function AdminAlbumsPage() {
                     scale: editingAlbumId && editingAlbumId !== album.id ? 0.95 : 1,
                   }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                 className={`relative rounded-xl border transition-all duration-300 overflow-hidden ${
-                   editingAlbumId === album.id
-                     ? 'border-accent-purple/40 bg-accent-purple/[0.04] shadow-lg shadow-accent-purple/10 ring-1 ring-accent-purple/20'
-                     : editingAlbumId ? 'border-white/[0.03] bg-white/[0.01]' : 'border-white/5 bg-white/[0.02] hover:border-white/10'
-                 }`}
-                  style={editingAlbumId && editingAlbumId !== album.id ? { pointerEvents: 'none' as const } : {}}
-               >
+                  transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
+                  className={`relative rounded-xl border transition-all duration-300 overflow-hidden ${
+                    editingAlbumId === album.id
+                      ? 'border-accent-purple/40 bg-accent-purple/[0.04] shadow-lg shadow-accent-purple/10 ring-1 ring-accent-purple/20'
+                      : editingAlbumId ? 'border-white/[0.03] bg-white/[0.01]' : 'border-white/5 bg-white/[0.02] hover:border-white/10'
+                  }`}
+                  style={editingAlbumId && editingAlbumId !== album.id ? { pointerEvents: 'none' } : undefined}
+                >
                   <div className="p-4">
                     {/* Top row: cover + info + action buttons */}
                     <div className="flex items-start gap-3 relative">
