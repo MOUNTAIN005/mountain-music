@@ -15,7 +15,6 @@ async function main() {
   await prisma.contact.deleteMany()
   await prisma.setting.deleteMany()
   console.log('Existing data cleared')
-
   // Create admin user (idempotent)
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@mountainmusic.com'
   const adminPassword = process.env.ADMIN_PASSWORD || 'admin123456'
