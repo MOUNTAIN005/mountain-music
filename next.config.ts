@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '100mb',
     },
+    outputFileTracingIncludes: {
+      '/**/*': ['./prisma/**/*'],
+    },
   },
 }
 
