@@ -175,13 +175,13 @@ export default function HeroSection() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.35 }}
-                className="pb-[0.2em] space-y-0.5 flex-shrink-0"
+                className="pb-[0.15em] space-y-0 flex-shrink-0"
               >
-                <p className="text-base sm:text-lg text-gray-200/90 font-medium tracking-wide leading-tight">
+                <p className="text-sm sm:text-base text-gray-300 tracking-wide leading-tight">
                   {song.artist}
                 </p>
                 {hasAlbum && (
-                  <p className="text-sm sm:text-base text-gray-500 leading-tight">
+                  <p className="text-base sm:text-lg text-gray-200/90 font-medium leading-tight">
                     {heroData.album}
                   </p>
                 )}
