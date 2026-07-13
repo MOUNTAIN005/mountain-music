@@ -6,7 +6,7 @@ export async function GET(request: Request) {
     const url = new URL(request.url); const showAll = url.searchParams.get("all") === "true";
     const albums = await prisma.album.findMany({
       where: showAll ? {} : { isPublished: true },
-      include: { songs: showAll ? true : { where: { isPublished: true } } },
+      include: { songs: true },
       orderBy: { createdAt: 'desc' },
     })
     return NextResponse.json({ success: true, data: albums })

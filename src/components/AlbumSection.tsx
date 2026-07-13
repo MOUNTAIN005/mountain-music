@@ -133,9 +133,12 @@ export default function AlbumSection() {
                                )}
                              </div>
                              <div className="flex-1 min-w-0">
-                               <span className={`text-xs ${hasAudio ? 'text-white' : 'text-gray-500'} truncate block`}>{s.title}</span>
-                               {s.description && (
-                                 <span className="text-[10px] text-gray-600 truncate block mt-0.5">{s.description}</span>
+                               {hasAudio ? (
+                                 <span className="text-xs text-white truncate block">{s.title}</span>
+                               ) : (
+                                 <span className="text-xs text-gray-500 truncate block">
+                                   {s.title}{s.description ? ` — ${s.description}` : ''}
+                                 </span>
                                )}
                              </div>
                              <span className="text-[10px] text-gray-600 tabular-nums">
