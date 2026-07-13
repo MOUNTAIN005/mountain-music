@@ -1,7 +1,7 @@
 {
   "build": {
-    "builder": "RAILPACK",
-    "buildCommand": "npm run build",
+    "builder": "nixpacks",
+    "buildCommand": null,
     "watchPatterns": []
   },
   "deploy": {
