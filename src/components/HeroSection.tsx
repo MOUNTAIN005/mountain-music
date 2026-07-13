@@ -35,6 +35,7 @@ export default function HeroSection() {
     }).finally(() => setLoaded(true))
   }, [])
 
+  const hasAlbum = !!(heroData?.album)
   const song = loaded && heroData && heroData.audioUrl ? {
     id: -999,
     title: heroData.title || '',
@@ -163,10 +164,28 @@ export default function HeroSection() {
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>
               主打推荐 · FEATURED
             </motion.p>
-            <motion.h1 className="text-4xl sm:text-5xl lg:text-7xl xl:text-8xl font-bold text-white leading-tight mb-3"
+            <motion.h1 className="text-4xl sm:text-5xl lg:text-7xl xl:text-8xl font-bold text-white leading-tight mb-1"
               initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}>
               {song.title}
             </motion.h1>
+
+            {/* Artist & Album — left-aligned below title */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.35 }}
+              className="mb-4 space-y-0.5"
+            >
+              <p className="text-base sm:text-lg text-gray-200/90 font-medium tracking-wide">
+                {song.artist}
+              </p>
+              {hasAlbum && (
+                <p className="text-sm sm:text-base text-gray-500">
+                  {heroData.album}
+                </p>
+              )}
+            </motion.div>
+
             <motion.p className="text-base sm:text-lg text-gray-300 max-w-xl mb-4 leading-relaxed"
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.4 }}>
               {song.description}
