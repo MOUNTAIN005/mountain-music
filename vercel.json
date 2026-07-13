@@ -1,5 +1,0 @@
-{
-  "env": {
-    "DATABASE_URL": "postgresql://postgres:jequirity0505@db.lyjpdfmefvayyzngetpw.supabase.co:5432/postgres?sslmode=require"
-  }
-}
