@@ -73,13 +73,23 @@ export default function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`relative px-4 py-2 text-sm transition-colors duration-300 ${
+                  className={`relative px-4 py-2 text-sm transition-colors duration-300 nav-link ${
                     isActive
                       ? 'text-white'
                       : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  {item.label}
+                  <span className="inline-flex">
+                    {item.label.split('').map((char, ci) => (
+                      <span
+                        key={ci}
+                        className="nav-link-char"
+                        style={{ animationDelay: ci * 0.04 + 's' }}
+                      >
+                        {char}
+                      </span>
+                    ))}
+                  </span>
                   {isActive && (
                     <motion.div
                       layoutId="navIndicator"

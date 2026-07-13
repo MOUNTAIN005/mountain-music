@@ -223,6 +223,12 @@ body {
   border-radius: 4px;
 }
 
+/* Orange breathing animation for recommendation section */
+@keyframes orange-breathe {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+
 /* Music note floating animation */
 @keyframes float-note {
   0% { transform: translateY(0) rotate(0deg); opacity: 0; }
@@ -246,3 +252,46 @@ body {
 .text-breath-glow {
   animation: breath-glow 3s ease-in-out infinite;
 }
+
+/* ─── Trionn-style animations ─── */
+
+/* Floating plus symbols */
+@keyframes float-plus {
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.15; }
+  90% { opacity: 0.15; }
+  50% { transform: translateY(-30px) rotate(180deg); }
+}
+
+/* Hero vibration */
+@keyframes vibrate {
+  0% { transform: translate(0); }
+  10% { transform: translate(-0.5px, 0.5px); }
+  20% { transform: translate(0.5px, -0.5px); }
+  30% { transform: translate(-0.5px, -0.5px); }
+  40% { transform: translate(0.5px, 0.5px); }
+  50% { transform: translate(-0.5px, 0.5px); }
+  60% { transform: translate(0.5px, -0.5px); }
+  70% { transform: translate(-0.5px, -0.5px); }
+  80% { transform: translate(0.5px, 0.5px); }
+  90% { transform: translate(-0.5px, 0.5px); }
+  100% { transform: translate(0); }
+}
+
+/* Nav link hover underline */
+.nav-link-char {
+  display: inline-block;
+  transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.25s ease;
+}
+.nav-link:hover .nav-link-char {
+  animation: char-bounce 0.4s ease forwards;
+}
+@keyframes char-bounce {
+  0% { transform: translateY(0); }
+  40% { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+
+/* Page transition */
+.page-enter { opacity: 0; }
+.page-enter-active { opacity: 1; transition: opacity 0.3s ease; }

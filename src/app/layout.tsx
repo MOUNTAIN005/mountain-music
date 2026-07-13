@@ -5,6 +5,8 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import AudioPlayer from '@/components/AudioPlayer'
 import ParticleBackground from '@/components/ParticleBackground'
+import FloatingPlus from '@/components/FloatingPlus'
+import ClientEffects from '@/components/ClientEffects'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -27,6 +29,8 @@ export default function RootLayout({
     <html lang="zh-CN" className="dark">
       <body className={`${inter.variable} bg-[#080808] text-white antialiased`}>
         <ParticleBackground />
+        <FloatingPlus />
+        <ClientEffects />
         <div className="relative z-10 flex min-h-screen flex-col">
           <Header />
           <main className="flex-1 w-full">{children}</main>

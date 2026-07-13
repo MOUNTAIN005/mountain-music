@@ -174,6 +174,7 @@ export default function HeroSection() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
+                style={{ animation: 'vibrate 0.3s ease-in-out 0.6s' }}
                 transition={{ duration: 0.6, delay: 0.35 }}
                 className="pb-[0.15em] space-y-0 flex-shrink-0"
               >
