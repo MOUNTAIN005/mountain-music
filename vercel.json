@@ -1,0 +1,9 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "node prisma/prepare-db.js && prisma generate --schema=prisma/schema.pg.prisma && next build",
+  "outputDirectory": ".next",
+  "installCommand": "pnpm install",
+  "env": {
+    "NEXT_PRIVATE_STANDALONE": "true"
+  }
+}
