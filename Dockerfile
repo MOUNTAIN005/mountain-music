@@ -1,37 +1,42 @@
-FROM node:20-slim AS base
-RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+FROM node:22-slim AS base
 
 # Install pnpm
-ENV PNPM_HOME=/pnpm
-ENV PATH=$PNPM_HOME:$PATH
 RUN npm install -g pnpm@latest
 
-FROM base AS deps
 WORKDIR /app
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY prisma ./prisma
+
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
+COPY prisma/ ./prisma/
+
+# Install ALL dependencies
 RUN pnpm install --frozen-lockfile
 
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# Copy all source files
 COPY . .
-RUN pnpm run build
-RUN cp -r prisma .next/standalone/
 
-FROM base AS runner
+# Build the application
+RUN node prisma/prepare-db.js
+RUN pnpm prisma generate --schema=prisma/schema.pg.prisma
+RUN pnpm next build
+
+# Production stage
+FROM node:22-slim AS runner
 WORKDIR /app
+
 ENV NODE_ENV=production
-RUN groupadd --system --gid 1001 nodejs && useradd --system --uid 1001 -g nodejs nextjs
+ENV NEXT_TELEMETRY_DISABLED=1
 
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder /app/node_modules ./node_modules
-COPY start.sh ./start.sh
+# Copy standalone output
+COPY --from=base /app/.next/standalone ./
+COPY --from=base /app/.next/static ./.next/static
+COPY --from=base /app/public ./public
+COPY --from=base /app/prisma ./prisma
+COPY --from=base /app/package.json ./package.json
+COPY --from=base /app/start.sh ./start.sh
+COPY --from=base /app/node_modules/.pnpm ./node_modules/.pnpm
+COPY --from=base /app/node_modules/@prisma ./node_modules/@prisma
 
-ENV HOME=/tmp
-USER nextjs
-EXPOSE 8080
-ENV HOSTNAME="0.0.0.0"
+EXPOSE 3000
+
 CMD ["sh", "start.sh"]
