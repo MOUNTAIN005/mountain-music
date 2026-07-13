@@ -1,8 +1,7 @@
+# MOUNTAIN MUSIC — 建站记录
 
-# MOUNTAIN MUSIC — 建站记录（2026-07-12 大重构）
-
-> 最后更新：2026-07-12（第三版）
-> 当前对话：MOUNTAINMUSIC建站聊天4
+> 最后更新：2026-07-13（建站聊天7 + 部署修复）
+> 当前对话：Codex
 
 ## 项目概况
 
@@ -20,7 +19,7 @@
 | Next.js | 15.5.20 |
 | React | 19.x |
 | TypeScript | 5.6 |
-| Prisma | 5.20 |
+| Prisma | 5.22 |
 | Tailwind CSS | 3.4 |
 | Framer Motion | 12.42.2 |
 | Zustand | 5.x |
@@ -41,7 +40,7 @@
 
 ## 数据库模型（精简后）
 
-User, Song, Album, RecommendedSong, Story, Contact, Setting
+User, Song, Album, RecommendedSong, Story, Contact, Setting, SocialLink
 (已移除未使用的 PlayRecord)
 
 ## 音频/文件上传策略
@@ -50,24 +49,23 @@ User, Song, Album, RecommendedSong, Story, Contact, Setting
 Volume 挂载到 /app/uploads（生产环境），本地开发用 public/uploads/。
 start.sh 在启动时自动将 music/ 中的歌曲文件复制到上传目录（仅首次）。
 
-## Railway 部署架构（最终）
+## Railway 部署架构（当前）
 
 ```
-Railpack build → npm install → npm run build (standalone output)
+GitHub push → Railway 自动检测 → Railpack 构建
          ↓
-Pre-deploy: npx prisma db push && npx prisma db seed
+node prisma/prepare-db.js → prisma generate --schema=prisma/schema.pg.prisma → next build
          ↓
-node .next/standalone/server.js
+start.sh: npx prisma db push --accept-data-loss → node .next/standalone/server.js
 ```
 
 **关键变更：**
-- 删掉 `railway.json` → 换用 Railpack 自动检测
-- 删掉 `railway-start.sh` → 功能全部由 Pre-deploy Command 替代
+- Dockerfile 已删除，回归 Railpack 自动检测
+- `pnpm-workspace.yaml` 允许 `@prisma/client` 和 `prisma` 构建脚本
+- `schema.prisma` 动态切换（`prepare-db.js` 根据环境自动选择 pg 或 sqlite）
+- 移除 `@vercel/blob`、`vercel` 等无用依赖
 - `next.config.ts` 加 `output: 'standalone'` → 构建输出适配 Railway
 - `package.json` start 改为 `node .next/standalone/server.js`
-- 移除 `@railway/cli` 依赖（不是必须的）
-- PlayRecord 模型已移除（从未使用）
-- 种子脚本精简：只创建管理员 + 网站设置，歌曲和故事通过后台管理界面添加
 
 ## 首次部署：Railway Dashboard 设置步骤
 
@@ -88,47 +86,37 @@ node .next/standalone/server.js
 **本地开发**
 ```
 cp .env.example .env.local
-npm install
-npx prisma db push
-npx prisma db seed
-npm run dev
+pnpm install
+pnpm run setup:local
+pnpm dev
 ```
 
-## 当前对话
+## 本轮改动（2026-07-13 建站聊天7 + 部署修复）
 
-对话名: MOUNTAINMUSIC建站聊天4
-下一个建议: Railway Dashboard 设置 + 首次部署
+### 建站聊天7 工作内容（从 git log 还原）
 
-## 本轮改动（2026-07-12 建站聊天6）
-
-### 前台 API 对接
-| 页面 | 改动 |
+| 改动 | 详情 |
 |------|------|
-| /stories | 去掉 mock 数据，改为从 `/api/stories` 拉取已审核+前台显示的故事 |
-| /stories/[id] | 改为从 `/api/stories/[id]` 拉取实时数据，含 loading/404/错误处理 |
-| /submit | 表单真正 POST 到 `/api/stories`，增加 submitting 状态和错误提示 |
-| /stories/[id] | 增加「相关歌曲」区块 + 时间轴歌词同步高亮 |
+| 尝试 Vercel Blob 存储 | 改用 Vercel Blob → 客户端直传 → 最终回退服务器上传 |
+| HERO 样式微调 | 作者/专辑名同行对齐、Artist 字体缩小 |
+| Railway 部署修复 | 多次修复 pnpm 构建 + Prisma + onlyBuiltDependencies |
 
-### 后端
-- `/api/stories/[id]` GET 增加 `include: { song: true }`，返回关联歌曲数据
+### 本轮部署修复（2026-07-13）
 
-### 已对接但用户说暂缓
-- 联系我们页（`/contact`）— 等想好方案再做
-- 故事管理侧边栏链接 — 页面已存在，`/admin/layout.tsx` 导航未加
-- 歌曲管理独立页面 — 决定在专辑页面内管理
+| 改动 | 原因 |
+|------|------|
+| 删除 Dockerfile | 回归 Railpack 零配置构建，避免 Railpack/Docker 冲突 |
+| `pnpm-workspace.yaml` | 允许 `@prisma/client` 和 `prisma` 运行构建脚本 |
+| `schema.prisma` → PostgreSQL | 默认 schema 同步为 PostgreSQL，匹配生产环境 |
+| 移除 `@vercel/blob`、`vercel` | Vercel 实验残留，已无代码引用 |
+| 本地构建验证 | 修正了 12 次连续 Railway 构建失败的问题 |
+
+### 待办
+- 后台管理页面上传功能测试
+- WAV → MP3 转换
+- 联系我们页功能完善
+- 故事管理侧边栏链接
 
 ### 下一个建议
-- 准备 WAV → MP3 转换
-- Railway 部署 + 后台上传测试
-
-## 本轮改动（2026-07-12 第三版）
-
-### 前台页面重构
-| 页面 | 改动 |
-|------|------|
-| /stories/[id] | 重构布局：封面图 → 紧凑播放器 → 故事文案，播放器缩小到约原有1/3高度（40px黑胶盘 + 单行内联布局 + 紧凑歌词区） |
-
-### 后台增强
-| 页面 | 改动 |
-|------|------|
-| /admin/stories | 编辑弹窗增加「故事配图」图片上传字段（UploadField），存入 story.imageUrl |
+- 确认 Railway 部署成功后，测试音频上传和播放功能
+- 完善 `prisma/schema.sqlite.prisma` 确保与 pg 版本模型同步
