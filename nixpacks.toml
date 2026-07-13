@@ -1,0 +1,14 @@
+[providers.node]
+version = "22"
+
+[phases.setup]
+nixPkgs = ["nodejs_22", "python3"]
+
+[phases.install]
+cmds = ["pnpm install"]
+
+[phases.build]
+cmds = ["node prisma/prepare-db.js", "prisma generate --schema=prisma/schema.pg.prisma", "next build"]
+
+[start]
+cmd = "sh start.sh"
