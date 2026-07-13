@@ -45,6 +45,9 @@ export default function UploadField({ accept, label, onUpload, currentUrl, previ
     setStatus('idle')
     setErrorMessage('')
 
+    const blobDone = await tryBlobUpload(file)
+    if (blobDone) { setUploading(false); setProgress(0); if (inputRef.current) inputRef.current.value = ''; return }
+
     const fd = new FormData()
     if (uploadContext) fd.append('context', uploadContext)
     if (oldFileUrl) fd.append('oldFileUrl', oldFileUrl)
@@ -100,6 +103,42 @@ export default function UploadField({ accept, label, onUpload, currentUrl, previ
 
     // Reset input so same file can be re-selected
     if (inputRef.current) inputRef.current.value = ''
+  }
+
+  async function tryBlobUpload(file: File): Promise<boolean> {
+    try {
+      const tokenRes = await fetch('/api/upload/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName: file.name, fileSize: file.size, fileType: file.type }),
+      })
+      if (!tokenRes.ok) return false
+
+      const { success, data } = await tokenRes.json()
+      if (!success || !data?.clientToken) return false
+
+      let blobClient: any
+      try {
+        blobClient = await import('@vercel/blob/client')
+      } catch {
+        return false
+      }
+
+      const blob = await blobClient.upload(data.storagePath, file, {
+        clientToken: data.clientToken,
+        onUploadProgress: (progress: { loaded: number; total: number }) => {
+          const pct = progress.total ? Math.round((progress.loaded / progress.total) * 100) : 0
+          setProgress(pct)
+        },
+      })
+
+      onUpload(blob.url)
+      setStatus('success')
+      setTimeout(() => setStatus('idle'), 3000)
+      return true
+    } catch {
+      return false
+    }
   }
 
   return (
