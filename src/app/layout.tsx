@@ -29,7 +29,7 @@ export default function RootLayout({
         <ParticleBackground />
         <div className="relative z-10 flex min-h-screen flex-col">
           <Header />
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 w-full">{children}</main>
           <Footer />
         </div>
         <AudioPlayer />

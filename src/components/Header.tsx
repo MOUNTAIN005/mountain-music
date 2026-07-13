@@ -31,7 +31,7 @@ export default function Header() {
   if (isAdmin) {
     return (
       <header className="fixed top-0 left-0 right-0 z-50 bg-[#080808]/80 backdrop-blur-xl border-b border-white/5">
-        <nav className="mx-auto max-w-[1770px] px-4 sm:px-6 lg:px-8">
+        <nav className="mx-auto max-w-[1700px] px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 items-center justify-end">
             <Link href="/" className="flex items-center gap-1 group flex-shrink-0">
               <span className="text-sm sm:text-base font-bold tracking-[0.15em] text-white/80 hover:text-white transition-colors">
@@ -53,7 +53,7 @@ export default function Header() {
           : 'bg-transparent'
       }`}
     >
-      <nav className="mx-auto max-w-[1770px] px-4 sm:px-6 lg:px-8">
+      <nav className="mx-auto max-w-[1700px] px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-1 group flex-shrink-0">

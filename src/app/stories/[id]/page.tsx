@@ -189,7 +189,7 @@ export default function StoryDetailPage() {
           transition={{ duration: 0.6 }}
         >
           <div className="prose prose-invert max-w-none">
-            {story.content.split('\n\n').map((paragraph, i) => (
+            {story.content.split('\n\n').map((paragraph: string, i: number) => (
               <motion.p
                 key={i}
                 initial={{ opacity: 0, y: 10 }}

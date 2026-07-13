@@ -6,7 +6,7 @@ import { Save, CheckCircle, Plus, Trash2, Music } from 'lucide-react'
 import UploadField from '@/components/UploadField'
 
 // Platform SVG icons
-const platformIcons: Record<string, (props: { size?: number }) => JSX.Element> = {
+const platformIcons = {
   douyin: ({ size = 24 }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M9 4h4v12a3 3 0 1 1-3-3V4Z" />
@@ -121,7 +121,7 @@ export default function AdminSocialsPage() {
   }
 
   const getIcon = (platform: string, size = 20) => {
-    const Icon = platformIcons[platform] || platformIcons._default
+    const Icon = platformIcons[platform as keyof typeof platformIcons] || platformIcons._default
     return <Icon size={size} />
   }
 

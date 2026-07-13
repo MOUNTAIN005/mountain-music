@@ -16,3 +16,5 @@ pnpm-lock.yaml
 prisma/dev.db
 public/music
 /music/
+.vercel
+.env*

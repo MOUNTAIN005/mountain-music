@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Music } from 'lucide-react'
 
 // Platform SVG icons (24x24)
-const platformIcons: Record<string, (props: { size?: number }) => JSX.Element> = {
+const platformIcons = {
   douyin: ({ size = 24 }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M9 4h4v12a3 3 0 1 1-3-3V4Z" />
@@ -113,7 +113,7 @@ export default function Footer() {
             <h3 className="text-sm font-semibold text-white mb-5">关注我们</h3>
             <div className="flex flex-wrap justify-center gap-3">
               {socials.map((social) => {
-                const Icon = platformIcons[social.platform] || platformIcons._default
+                const Icon = platformIcons[social.platform as keyof typeof platformIcons] || platformIcons._default
 
                 return (
                   <div

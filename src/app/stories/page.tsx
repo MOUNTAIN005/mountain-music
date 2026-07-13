@@ -23,7 +23,7 @@ export default function StoriesPage() {
 
   return (
     <div className="min-h-screen pt-24 pb-24 px-4">
-      <div className="max-w-[1770px] mx-auto">
+      <div className="max-w-[1700px] mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -51,7 +51,7 @@ export default function StoriesPage() {
           <div className="text-center py-20">
             <BookOpen size={48} className="text-gray-700 mx-auto mb-4" />
             <p className="text-gray-500 text-lg mb-2">还没有故事</p>
-            <p className="text-gray-600 text-sm">等审核通过的故事展示在这里</p>
+            <p className="text-gray-400 text-base mb-6">来分享第一个吧 ✨</p><Link href="/submit" className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-accent-purple to-accent-blue text-white font-medium hover:shadow-lg hover:shadow-accent-purple/25 transition-all"><BookOpen size={18} />分享你的故事</Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

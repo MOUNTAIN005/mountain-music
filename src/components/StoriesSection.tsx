@@ -242,7 +242,7 @@ export default function StoriesSection() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center py-16"
+              className="text-center py-16 col-span-2 md:col-span-4"
             >
               <BookOpen size={36} className="text-gray-700 mx-auto mb-3" />
               <p className="text-gray-600 text-sm mb-1">还没有故事</p>

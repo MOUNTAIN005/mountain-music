@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createWriteStream, mkdirSync, writeFileSync, unlinkSync, existsSync } from 'fs'
-import { join, resolve } from 'path'
+import { join, resolve, dirname } from 'path'
+import { put, del } from '@vercel/blob'
 
 export const maxDuration = 60
 
@@ -19,6 +20,29 @@ function fileUrlToPath(url: string): string {
   if (!url) return ''
   const baseDir = process.env.UPLOAD_DIR || join(process.cwd(), 'public', 'uploads')
   return join(baseDir, url.replace('/api/uploads/', ''))
+}
+
+const isBlobEnabled = !!process.env.BLOB_READ_WRITE_TOKEN
+
+async function persistFile(storagePath: string, buffer: Buffer): Promise<string> {
+  if (isBlobEnabled) {
+    const blob = await put(storagePath, buffer, { access: 'public', addRandomSuffix: false })
+    return blob.url
+  }
+  const baseDir = process.env.UPLOAD_DIR || join(process.cwd(), 'public', 'uploads')
+  const fullPath = join(baseDir, storagePath)
+  mkdirSync(dirname(fullPath), { recursive: true })
+  writeFileSync(fullPath, buffer)
+  return `/api/uploads/${storagePath}`
+}
+
+async function deleteStorageFile(urlOrPath: string): Promise<void> {
+  if (!urlOrPath) return
+  if (isBlobEnabled && urlOrPath.startsWith('http')) {
+    try { await del(urlOrPath) } catch {}
+  } else {
+    try { unlinkSync(fileUrlToPath(urlOrPath)) } catch {}
+  }
 }
 
 export async function POST(request: Request) {
@@ -75,8 +99,6 @@ async function handleStreamingUpload(request: Request, contentType: string, busb
     let fileName = ''
     let context = ''
     let oldFileUrl = ''
-    let fileStream: import('fs').WriteStream | null = null
-    const baseDir = process.env.UPLOAD_DIR || join(process.cwd(), 'public', 'uploads')
 
     bb.on('file', (_fieldname: string, file: import('stream').Readable, info: { filename: string; encoding: string; mimeType: string }) => {
       if (fileFound) { file.resume(); return }
@@ -106,46 +128,43 @@ async function handleStreamingUpload(request: Request, contentType: string, busb
       }
 
       const subDir = isAudio ? 'audio' : 'images'
-      const uploadDir = join(baseDir, subDir)
-      mkdirSync(uploadDir, { recursive: true })
-      const filePath = join(uploadDir, fileName)
-
-      fileStream = createWriteStream(filePath)
-
-      file.pipe(fileStream)
+      const blobPath = `${subDir}/${fileName}`
+      const chunks: Buffer[] = []
 
       file.on('data', (chunk: Buffer) => {
+        chunks.push(chunk)
         fileSize += chunk.length
         const maxSize = getMaxFileSize(context)
         if (fileSize > maxSize) {
           file.destroy()
-          fileStream?.destroy()
-          try { unlinkSync(filePath) } catch {}
+          chunks.length = 0
           const mb = (maxSize / 1024 / 1024).toFixed(maxSize >= 1024 * 1024 ? 1 : 3)
           resolve(NextResponse.json({ success: false, error: `文件过大（超过 ${maxSize >= 1024 * 1024 ? mb + 'MB' : Math.round(maxSize / 1024) + 'KB'}）` }, { status: 413 }))
         }
       })
 
       file.on('error', () => {
-        fileStream?.destroy()
+        chunks.length = 0
         if (!uploadComplete) resolve(NextResponse.json({ success: false, error: '文件流读取失败' }, { status: 500 }))
+      })
+
+      file.on('end', async () => {
+        try {
+          const buffer = Buffer.concat(chunks)
+          const url = await persistFile(blobPath, buffer)
+          if (oldFileUrl) await deleteStorageFile(oldFileUrl)
+          uploadComplete = true
+          resolve(NextResponse.json({ success: true, data: { url, fileName, type: subDir } }))
+        } catch (err: any) {
+          if (!uploadComplete) resolve(NextResponse.json({ success: false, error: `上传失败: ${err.message}` }, { status: 500 }))
+        }
       })
     })
 
     bb.on('finish', () => {
-      uploadComplete = true
-      if (!fileFound) {
+      if (!fileFound && !uploadComplete) {
         resolve(NextResponse.json({ success: false, error: '未找到上传文件' }, { status: 400 }))
-        return
       }
-      const subDir = fileName.match(/\.(mp3|wav|flac|ogg|aac|m4a)$/i) ? 'audio' : 'images'
-      const url = `/api/uploads/${subDir}/${fileName}`
-
-      // Delete old file if this was a replacement upload
-      if (oldFileUrl) {
-        try { unlinkSync(fileUrlToPath(oldFileUrl)) } catch {}
-      }
-      resolve(NextResponse.json({ success: true, data: { url, fileName, type: subDir } }))
     })
 
 
@@ -208,32 +227,18 @@ async function handleFormDataUpload(request: Request): Promise<Response> {
   }
 
   const subDir = isAudio ? 'audio' : 'images'
-  const baseDir = process.env.UPLOAD_DIR || join(process.cwd(), 'public', 'uploads')
-  const uploadDir = join(baseDir, subDir)
-  mkdirSync(uploadDir, { recursive: true })
 
   const bytes = await file.arrayBuffer()
   const buffer = Buffer.from(bytes)
   const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
 
-  try {
-    writeFileSync(join(uploadDir, fileName), buffer)
-
-    // Delete old file if this was a replacement upload
-    if (formOldFileUrl) {
-      try { unlinkSync(fileUrlToPath(formOldFileUrl)) } catch {}
-    }
-  } catch (writeErr: any) {
-    if (writeErr.code === 'ENOSPC') {
-      return NextResponse.json({ success: false, error: '磁盘空间不足' }, { status: 500 })
-    }
-    if (writeErr.code === 'EACCES' || writeErr.code === 'EPERM') {
-      return NextResponse.json({ success: false, error: '文件写入权限不足' }, { status: 500 })
-    }
-    throw writeErr
+  // Delete old file first if this was a replacement upload
+  if (formOldFileUrl) {
+    await deleteStorageFile(formOldFileUrl)
   }
 
-  const url = `/api/uploads/${subDir}/${fileName}`
+  const blobPath = `${subDir}/${fileName}`
+  const url = await persistFile(blobPath, buffer)
 
   return NextResponse.json({ success: true, data: { url, fileName, type: subDir } })
 }
