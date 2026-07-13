@@ -1,12 +1,15 @@
 FROM node:22-slim AS base
 
+# Install OpenSSL for Prisma
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
 # Install pnpm
 RUN npm install -g pnpm@latest
 
 WORKDIR /app
 
-# Copy package files
-COPY package.json pnpm-lock.yaml ./
+# Copy package files and pnpm config
+COPY package.json pnpm-lock.yaml .npmrc ./
 COPY prisma/ ./prisma/
 
 # Install ALL dependencies
@@ -22,6 +25,10 @@ RUN pnpm next build
 
 # Production stage
 FROM node:22-slim AS runner
+
+# Install OpenSSL for Prisma (needed at runtime too)
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -32,10 +39,7 @@ COPY --from=base /app/.next/standalone ./
 COPY --from=base /app/.next/static ./.next/static
 COPY --from=base /app/public ./public
 COPY --from=base /app/prisma ./prisma
-COPY --from=base /app/package.json ./package.json
 COPY --from=base /app/start.sh ./start.sh
-COPY --from=base /app/node_modules/.pnpm ./node_modules/.pnpm
-COPY --from=base /app/node_modules/@prisma ./node_modules/@prisma
 
 EXPOSE 3000
 

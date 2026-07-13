@@ -1,8 +1,7 @@
-.next
 node_modules
+.next
 .git
-.gitignore
-*.md
-.env*
-public/uploads
 *.local
+.DS_Store
+.gitignore
+README.md
