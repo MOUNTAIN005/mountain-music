@@ -4,9 +4,9 @@ import { prisma } from '@/lib/prisma'
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url); const showAll = url.searchParams.get("all") === "true";
-      const albums = await prisma.album.findMany({
+    const albums = await prisma.album.findMany({
       where: showAll ? {} : { isPublished: true },
-      include: { songs: { where: { isPublished: true } } },
+      include: { songs: showAll ? true : { where: { isPublished: true } } },
       orderBy: { createdAt: 'desc' },
     })
     return NextResponse.json({ success: true, data: albums })

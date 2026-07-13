@@ -110,33 +110,41 @@ export default function AlbumSection() {
                       <h3 className="text-base font-semibold text-white mb-4 truncate">
                         <span className="text-gray-400 font-normal text-sm">专辑名：</span>{album.title}
                       </h3>
-                      <div className="space-y-1">
-                        {(album.songs || []).map((s: any) => {
-                          const isThis = currentSong?.id === s.id && isPlaying
-                          return (
-                            <button key={s.id}
-                              onClick={() => { setSelectedKey(`${album.id}-${s.id}`); play({...s}) }}
-                              className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 transition-colors text-left group">
-                              <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-accent-purple/20 transition-colors">
-                                {isThis ? (
-                                  <div className="flex gap-0.5 items-end h-2.5">
-                                    {[1, 2, 3].map(j => (
-                                      <div key={j} className="w-0.5 bg-accent-purple rounded-full"
-                                        style={{ height: `${40 + j * 20}%`, animation: `sound-wave 0.8s ease-in-out infinite alternate`, animationDelay: `${j * 0.15}s` }} />
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <Play size={12} className="text-gray-400 ml-0.3" />
-                                )}
-                              </div>
-                              <span className="flex-1 text-xs text-white truncate">{s.title}</span>
-                              <span className="text-[10px] text-gray-600 tabular-nums">
-                                {Math.floor((s.duration || 200) / 60)}:{String((s.duration || 200) % 60).padStart(2, '0')}
-                              </span>
-                            </button>
-                          )
-                        })}
-                      </div>
+                     <div className="space-y-1">
+                       {(album.songs || []).map((s: any) => {
+                         const isThis = currentSong?.id === s.id && isPlaying
+                         const hasAudio = !!s.audioUrl
+                         return (
+                           <button key={s.id}
+                             onClick={hasAudio ? () => { setSelectedKey(`${album.id}-${s.id}`); play({...s}) } : undefined}
+                             className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors text-left group ${hasAudio ? 'hover:bg-white/5 cursor-pointer' : 'cursor-default'}`}>
+                             <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0 transition-colors">
+                               {hasAudio ? (isThis ? (
+                                 <div className="flex gap-0.5 items-end h-2.5">
+                                   {[1, 2, 3].map(j => (
+                                     <div key={j} className="w-0.5 bg-accent-purple rounded-full"
+                                       style={{ height: `${40 + j * 20}%`, animation: `sound-wave 0.8s ease-in-out infinite alternate`, animationDelay: `${j * 0.15}s` }} />
+                                   ))}
+                                 </div>
+                               ) : (
+                                 <Play size={12} className="text-gray-400 ml-0.3" />
+                               )) : (
+                                 <Music size={12} className="text-gray-600" />
+                               )}
+                             </div>
+                             <div className="flex-1 min-w-0">
+                               <span className={`text-xs ${hasAudio ? 'text-white' : 'text-gray-500'} truncate block`}>{s.title}</span>
+                               {s.description && (
+                                 <span className="text-[10px] text-gray-600 truncate block mt-0.5">{s.description}</span>
+                               )}
+                             </div>
+                             <span className="text-[10px] text-gray-600 tabular-nums">
+                               {Math.floor((s.duration || 200) / 60)}:{String((s.duration || 200) % 60).padStart(2, '0')}
+                             </span>
+                           </button>
+                         )
+                       })}
+                     </div>
                     </div>
                     <div className="bg-gradient-to-br from-accent-purple/20 via-accent-blue/10 to-transparent flex items-center justify-center p-6">
                       <div className="w-full aspect-square rounded-xl overflow-hidden shadow-lg bg-white/5 flex items-center justify-center">
