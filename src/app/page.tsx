@@ -6,7 +6,7 @@ import StoriesSection from '@/components/StoriesSection'
 
 export default function HomePage() {
   return (
-    <>
+    <div className="pb-20 lg:pb-0">
       {/* 1. Hero Section - 16:9 full screen */}
       <HeroSection />
 
@@ -18,6 +18,8 @@ export default function HomePage() {
 
       {/* 4. Stories Section - max-w-[1700px] centered */}
       <StoriesSection />
-    </>
+
+      <MobileBottomPlayer />
+    </div>
   )
 }
