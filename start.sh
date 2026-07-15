@@ -1,6 +1,29 @@
 #!/bin/bash
-echo "[start.sh] Starting up... DATABASE_URL set: $([ -n "$DATABASE_URL" ] && echo yes || echo no)"
-echo "[start.sh] Node version: $(node --version)"
-ls -la /app/node_modules/.bin/next 2>/dev/null && echo "[start.sh] next binary found" || echo "[start.sh] next binary NOT found"
-echo "[start.sh] Starting Next.js server..."
-exec node /app/node_modules/.bin/next start
+# Railway startup script - DATABASE_URL fallback
+# Dashboard env vars always take precedence over this config
+
+if [ -z "$DATABASE_URL" ]; then
+  export DATABASE_URL="postgresql://postgres:jequirity0505@db.lyjpdfmefvayyzngetpw.supabase.co:5432/postgres?sslmode=require"
+  echo "[start.sh] DATABASE_URL not set - using Supabase fallback"
+fi
+
+# Run database migration
+echo "[start.sh] Running database migration..."
+if [ -f "prisma/schema.prisma" ]; then
+  pnpm prisma db push --accept-data-loss 2>&1 || echo "[start.sh] Migration skipped (non-fatal)"
+  pnpm prisma db seed 2>&1 || echo "[start.sh] Seed skipped (can run later)"
+else
+  echo "[start.sh] prisma/schema.prisma not found, skipping migration"
+fi
+
+# Start Next.js standalone server (handle different deployment paths)
+echo "[start.sh] Starting Next.js standalone server..."
+if [ -f "server.js" ]; then
+  exec node server.js
+elif [ -f ".next/standalone/server.js" ]; then
+  exec node .next/standalone/server.js
+else
+  echo "[start.sh] ERROR: server.js not found in .next/standalone/ or ./"
+  ls -la
+  exit 1
+fi
