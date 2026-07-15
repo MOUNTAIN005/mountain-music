@@ -4,7 +4,8 @@ FROM node:22-slim AS base
 RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 # Install pnpm
-RUN npm install -g pnpm@latest
+ # Pin pnpm to v10 to avoid build script approval requirement in v11
+ RUN npm install -g pnpm@10
 
 WORKDIR /app
 
