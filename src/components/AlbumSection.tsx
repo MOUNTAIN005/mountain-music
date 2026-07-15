@@ -60,10 +60,10 @@ export default function AlbumSection() {
           <h2 className="text-3xl lg:text-4xl font-bold text-white">精选专辑推荐</h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
           {/* Loading skeleton */}
           {showSkeleton && Array.from({ length: 2 }).map((_, i) => (
-            <div key={`sk-al-${i}`} className="rounded-2xl overflow-hidden glass min-h-[300px]">
+            <div key={`sk-al-${i}`} className="rounded-2xl overflow-hidden glass min-h-[200px]">
               <div className="grid grid-cols-2 h-full">
                 <div className="p-5 space-y-4">
                   <div className="h-4 w-3/4 skeleton-pulse" />
@@ -102,11 +102,11 @@ export default function AlbumSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: ai * 0.15 }}
-                className="rounded-2xl overflow-hidden glass min-h-[300px]"
+                className="rounded-2xl overflow-hidden glass min-h-[200px]"
               >
                {!isSelected ? (
                  <div className="grid grid-cols-2 h-full">
-                   <div className="p-5 flex flex-col justify-start">
+                   <div className="p-4 flex flex-col justify-start">
                       <h3 className="text-base font-semibold text-white mb-4 truncate">
                         <span className="text-gray-400 font-normal text-sm">专辑名：</span>{album.title}
                       </h3>
@@ -134,9 +134,9 @@ export default function AlbumSection() {
                              </div>
                              <div className="flex-1 min-w-0">
                                {hasAudio ? (
-                                 <span className="text-xs text-white truncate block">{s.title}</span>
+                                 <span className="text-xs text-white leading-snug block break-words">{s.title}</span>
                                ) : (
-                                 <span className="text-xs text-gray-500 truncate block">
+                                 <span className="text-xs text-gray-500 leading-snug block">
                                    {s.title}{s.description ? ` — ${s.description}` : ''}
                                  </span>
                                )}
