@@ -81,7 +81,7 @@ export default function HeroSection() {
   }
 
   if (!song) return (
-    <section className="relative w-full h-screen sm:aspect-video sm:max-h-screen overflow-hidden">
+    <section className="relative w-full h-[66vh] sm:aspect-video sm:max-h-screen overflow-hidden">
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 bg-[#080808]" />
         <div className="absolute inset-0 bg-black/40 backdrop-blur-[8px]" />
@@ -110,7 +110,7 @@ export default function HeroSection() {
 
  return (
     <>
-    <section className="relative w-full h-screen sm:aspect-video sm:max-h-screen overflow-hidden">
+    <section className="relative w-full h-[66vh] sm:aspect-video sm:max-h-screen overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-110 will-change-transform"
