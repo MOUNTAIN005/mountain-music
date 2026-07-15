@@ -10,8 +10,8 @@ fi
 # Run database migration in background (non-blocking for healthcheck)
 echo "[start.sh] Running database migration in background..."
 if [ -f "prisma/schema.prisma" ]; then
-  (sleep 3 && npx prisma db push --accept-data-loss 2>&1 || echo "[start.sh] Migration failed (non-fatal)") &
-  (sleep 8 && npx prisma db seed 2>&1 || echo "[start.sh] Seed skipped (can run later)") &
+  (sleep 3 && pnpm prisma db push --accept-data-loss 2>&1 || echo "[start.sh] Migration failed (non-fatal)") &
+  (sleep 8 && pnpm prisma db seed 2>&1 || echo "[start.sh] Seed skipped (can run later)") &
 else
   echo "[start.sh] prisma/schema.prisma not found, skipping migration"
 fi
@@ -23,8 +23,8 @@ if [ -f "server.js" ]; then
 elif [ -f ".next/standalone/server.js" ]; then
   exec node .next/standalone/server.js
 elif command -v next &> /dev/null || [ -f "node_modules/.bin/next" ]; then
-  echo "[start.sh] Using next start (nixpacks mode)..."
-  exec npx next start
+  echo "[start.sh] Using pnpm next start..."
+  exec pnpm next start
 else
   echo "[start.sh] ERROR: no server found"
   ls -la
