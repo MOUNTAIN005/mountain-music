@@ -128,7 +128,7 @@ async function connectAndExecute(sql: string): Promise<string> {
   const client = await pool.connect()
   try {
     const result = await client.query(sql)
-    return `OK: ${result.length || 'all'} tables created`
+    return `OK: ${result.rowCount || 'all'} tables created`
   } finally {
     client.release()
     await pool.end()
