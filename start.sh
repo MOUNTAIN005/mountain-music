@@ -7,11 +7,11 @@ if [ -z "$DATABASE_URL" ]; then
   echo "[start.sh] DATABASE_URL not set - using Supabase fallback"
 fi
 
-# Run database migration
-echo "[start.sh] Running database migration..."
+# Run database migration in background (non-blocking for healthcheck)
+echo "[start.sh] Running database migration in background..."
 if [ -f "prisma/schema.prisma" ]; then
-  npx prisma db push --accept-data-loss 2>&1 || echo "[start.sh] Migration skipped (non-fatal)"
-  npx prisma db seed 2>&1 || echo "[start.sh] Seed skipped (can run later)"
+  (sleep 3 && npx prisma db push --accept-data-loss 2>&1 || echo "[start.sh] Migration failed (non-fatal)") &
+  (sleep 8 && npx prisma db seed 2>&1 || echo "[start.sh] Seed skipped (can run later)") &
 else
   echo "[start.sh] prisma/schema.prisma not found, skipping migration"
 fi
