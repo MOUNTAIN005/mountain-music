@@ -43,13 +43,13 @@ export default function MobileBottomPlayer() {
         )}
 
         {/* Song info - width limited */}
-        <div className="flex-1 min-w-0 max-w-[40%]">
+        <div className="min-w-0">
           <p className="text-xs text-white font-medium truncate leading-tight">{currentSong.title}</p>
           <p className="text-[10px] text-gray-500 truncate leading-tight">{currentSong.artist || '山影知道'}</p>
         </div>
 
         {/* Controls - centered */}
-        <div className="flex items-center gap-0.5 shrink-0 ml-auto">
+        <div className="flex items-center gap-0.5 shrink-0 ">
           <button
             onClick={() => setRepeatMode(repeatMode === 'none' ? 'one' : 'none')}
             className={`p-0.5 rounded transition-colors ${repeatMode === 'one' ? 'text-accent-purple' : 'text-gray-500'}`}
