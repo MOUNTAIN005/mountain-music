@@ -64,15 +64,10 @@ export default function AlbumSection() {
           {/* Loading skeleton */}
           {showSkeleton && Array.from({ length: 2 }).map((_, i) => (
             <div key={`sk-al-${i}`} className="rounded-2xl overflow-hidden glass min-h-[200px]">
-              <div className="grid grid-cols-2 h-full">
-                <div className="p-5 space-y-4">
-                  <div className="h-4 w-3/4 skeleton-pulse" />
-                  <div className="space-y-2">
-                    {[1,2,3].map(j => <div key={j} className="h-8 skeleton-pulse rounded-xl" />)}
-                  </div>
-                </div>
-                <div className="p-6">
-                  <div className="w-full aspect-square rounded-xl skeleton-pulse" />
+              <div className="p-5 space-y-4">
+                <div className="h-4 w-3/4 skeleton-pulse" />
+                <div className="space-y-2">
+                  {[1,2,3].map(j => <div key={j} className="h-8 skeleton-pulse rounded-xl" />)}
                 </div>
               </div>
             </div>
@@ -102,12 +97,20 @@ export default function AlbumSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: ai * 0.15 }}
-                className="rounded-2xl overflow-hidden glass min-h-[200px]"
+                className="rounded-2xl overflow-hidden glass min-h-[200px] relative"
               >
                {!isSelected ? (
-                 <div className="grid grid-cols-2 h-full">
-                   <div className="p-4 flex flex-col justify-start">
-                      <h3 className="text-base font-semibold text-white mb-4 truncate">
+                 <div className="relative h-full">
+                   {album.coverUrl && (
+                     <>
+                       <div className="absolute inset-0">
+                         <img src={album.coverUrl} className="w-full h-full object-cover opacity-30" alt="" />
+                       </div>
+                       <div className="absolute inset-0 bg-black/50" />
+                     </>
+                   )}
+                   <div className="relative z-10 p-4 flex flex-col justify-start h-full">
+                      <h3 className="text-base font-semibold text-white mb-4">
                         <span className="text-gray-400 font-normal text-sm">专辑名：</span>{album.title}
                       </h3>
                      <div className="space-y-0.5">
@@ -141,7 +144,7 @@ export default function AlbumSection() {
                                  </span>
                                )}
                              </div>
-                             <span className="text-[10px] text-gray-600 tabular-nums">
+                             <span className="text-[10px] text-gray-600 tabular-nums ml-auto">
                                {Math.floor((s.duration || 200) / 60)}:{String((s.duration || 200) % 60).padStart(2, '0')}
                              </span>
                            </button>
