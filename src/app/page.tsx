@@ -1,5 +1,6 @@
 import HeroSection from '@/components/HeroSection'
 import MusicRecommendation from '@/components/MusicRecommendation'
+import MobileBottomPlayer from '@/components/MobileBottomPlayer'
 import AlbumSection from '@/components/AlbumSection'
 import StoriesSection from '@/components/StoriesSection'
 
