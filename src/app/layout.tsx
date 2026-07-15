@@ -31,8 +31,8 @@ export default function RootLayout({
         <ParticleBackground />
         <FloatingPlus />
         <ClientEffects />
+        <Header />
         <div className="relative z-10 flex min-h-screen flex-col">
-          <Header />
           <main className="flex-1 w-full">{children}</main>
           <Footer />
         </div>

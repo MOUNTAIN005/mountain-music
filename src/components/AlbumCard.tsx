@@ -48,16 +48,19 @@ export default function AlbumCard({ album, index = 0 }: AlbumCardProps) {
           <div className="absolute top-3 right-3 px-2 py-1 rounded-full bg-black/50 backdrop-blur-sm text-xs text-gray-300">
             {album.songs?.length || 0} 首
           </div>
-        </div>
 
-        <h3 className="text-sm font-semibold text-white group-hover:text-accent-purple transition-colors truncate">
-          {album.title}
-        </h3>
-        {album.description && (
-          <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-            {album.description}
-          </p>
-        )}
+          {/* Album info at bottom-left */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
+            <h3 className="text-sm font-semibold text-white truncate">
+              {album.title}
+            </h3>
+            {album.description && (
+              <p className="text-xs text-gray-300/80 mt-0.5 line-clamp-1">
+                {album.description}
+              </p>
+            )}
+          </div>
+        </div>
       </Link>
     </motion.div>
   )
