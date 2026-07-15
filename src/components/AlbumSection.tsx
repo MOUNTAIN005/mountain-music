@@ -148,17 +148,8 @@ export default function AlbumSection() {
                          )
                        })}
                      </div>
-                    </div>
-                    <div className="bg-gradient-to-br from-accent-purple/20 via-accent-blue/10 to-transparent flex items-center justify-center p-6">
-                      <div className="w-full aspect-square rounded-xl overflow-hidden shadow-lg bg-white/5 flex items-center justify-center">
-                        {album.coverUrl ? (
-                          <img src={album.coverUrl} className="w-full h-full object-cover" alt={album.title} />
-                        ) : (
-                          <Disc3 size={56} className="text-white/15" />
-                        )}
-                      </div>
-                    </div>
                   </div>
+                </div>
                 ) : song ? (
                   <div className="grid grid-cols-2 h-full">
                     <div className="p-5 flex flex-col justify-between">
