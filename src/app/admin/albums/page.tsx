@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Trash2, Save, Disc3, Music, Upload, X, Heart, Pencil, RotateCcw, ChevronDown, ChevronUp, Layers } from 'lucide-react'
+import { Plus, Trash2, Save, Disc3, Music, Upload, X, Heart, Pencil, RotateCcw, ChevronDown, ChevronUp, Layers, CheckCircle, AlertCircle } from 'lucide-react'
 
 interface SongForm { id?: number; title: string; artist: string; audioUrl: string; description: string; lyrics: string; isRecommended?: boolean; duration?: number }
 interface AlbumForm { title: string; description: string; coverUrl: string; songs: SongForm[] }
@@ -14,6 +14,14 @@ export default function AdminAlbumsPage() {
   const [editingAlbumId, setEditingAlbumId] = useState<number | null>(null)
   const [form, setForm] = useState<AlbumForm>({ title: '', description: '', coverUrl: '', songs: [{ title: '', artist: '山影知道', audioUrl: '', description: '', lyrics: '', isRecommended: false }] })
   const [audioUploading, setAudioUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({})
+  const [uploadedFileName, setUploadedFileName] = useState<Record<string, string>>({})
+  const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' } | null>(null)
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ show: true, message, type })
+    setTimeout(() => setToast(null), 3000)
+  }
 
   useEffect(() => { loadAlbums() }, [])
 
@@ -28,34 +36,71 @@ export default function AdminAlbumsPage() {
     } catch {}
   }
 
-  const uploadFile = async (file: File, type: 'image' | 'audio'): Promise<string> => {
-    const fd = new FormData(); fd.append('file', file)
-    const r = await fetch('/api/upload', { method: 'POST', body: fd })
-    const d = await r.json()
-    return d.success ? d.data.url : ''
+  const uploadFileWithProgress = (file: File, type: 'image' | 'audio', key: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const fd = new FormData()
+      fd.append('file', file)
+      const xhr = new XMLHttpRequest()
+      xhr.open('POST', '/api/upload')
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100)
+          setUploadProgress(prev => ({ ...prev, [key]: pct }))
+        }
+      }
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          try {
+            const d = JSON.parse(xhr.responseText)
+            if (d.success) resolve(d.data.url)
+            else reject(new Error(d.error || '上传失败'))
+          } catch { reject(new Error('解析响应失败')) }
+        } else {
+          reject(new Error('上传失败 (' + xhr.status + ')'))
+        }
+      }
+      xhr.onerror = () => reject(new Error('网络错误'))
+      xhr.send(fd)
+    })
   }
 
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return
-    const url = await uploadFile(file, 'image')
-    if (url) setForm(f => ({ ...f, coverUrl: url }))
+    setUploadedFileName(prev => ({ ...prev, cover: file.name }))
+    setUploadProgress(prev => ({ ...prev, cover: 0 }))
+    try {
+      const url = await uploadFileWithProgress(file, 'image', 'cover')
+      if (url) {
+        setForm(f => ({ ...f, coverUrl: url }))
+        showToast('封面上传成功！')
+      }
+    } catch (err: any) {
+      showToast(err.message || '封面上传失败', 'error')
+    }
   }
 
   const handleAudioUpload = async (idx: number, file: File) => {
     setAudioUploading(true)
-    const url = await uploadFile(file, 'audio')
-    if (url) {
-      // Extract audio duration from the local file before upload
-      let duration = 0
-      try {
-        const tmpAudio = new Audio(URL.createObjectURL(file))
-        await new Promise<void>((resolve) => {
-          tmpAudio.onloadedmetadata = () => { duration = Math.round(tmpAudio.duration) || 0; resolve() }
-          tmpAudio.onerror = () => resolve()
-        })
-      } catch {}
-      const s = [...form.songs]; s[idx] = { ...s[idx], audioUrl: url, duration }
-      setForm(f => ({ ...f, songs: s }))
+    const key = 'audio_' + idx
+    setUploadedFileName(prev => ({ ...prev, [key]: file.name }))
+    setUploadProgress(prev => ({ ...prev, [key]: 0 }))
+    try {
+      const url = await uploadFileWithProgress(file, 'audio', key)
+      if (url) {
+        let duration = 0
+        try {
+          const tmpAudio = new Audio(URL.createObjectURL(file))
+          await new Promise<void>((resolve) => {
+            tmpAudio.onloadedmetadata = () => { duration = Math.round(tmpAudio.duration) || 0; resolve() }
+            tmpAudio.onerror = () => resolve()
+          })
+        } catch {}
+        const s = [...form.songs]; s[idx] = { ...s[idx], audioUrl: url, duration }
+        setForm(f => ({ ...f, songs: s }))
+        showToast('音频上传成功！')
+      }
+    } catch (err: any) {
+      showToast(err.message || '音频上传失败', 'error')
     }
     setAudioUploading(false)
   }
@@ -142,7 +187,31 @@ export default function AdminAlbumsPage() {
               <div className="w-20 h-20 rounded-xl bg-white/5 flex items-center justify-center overflow-hidden">
                 {form.coverUrl ? <img src={form.coverUrl} className="w-full h-full object-cover" alt="" /> : <Disc3 size={28} className="text-gray-600" />}
               </div>
-              <input type="file" accept="image/*" onChange={handleCoverUpload} className="text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-white/10 file:text-white hover:file:bg-white/20" />
+              <div className="flex-1 min-w-0">
+                    <input type="file" accept="image/*" onChange={handleCoverUpload} className="text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-white/10 file:text-white hover:file:bg-white/20" />
+                  <div className="flex-1 min-w-0">
+                    {uploadedFileName.cover && (
+                      <p className="text-[11px] text-green-400 mt-1.5 truncate">
+                        {uploadProgress.cover === 100 ? "✅ " : ""}{uploadedFileName.cover}
+                      </p>
+                    )}
+                    {uploadProgress.cover !== undefined && uploadProgress.cover < 100 && (
+                      <div className="w-full h-1.5 bg-white/10 rounded-full mt-1.5 overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all duration-300" style={{ width: uploadProgress.cover + "%" }} />
+                      </div>
+                    )}
+                  </div>
+                    {uploadedFileName.cover && (
+                      <p className="text-[11px] text-green-400 mt-1.5 truncate">
+                        {uploadProgress.cover === 100 ? '✅ ' : ''}{uploadedFileName.cover}
+                      </p>
+                    )}
+                    {uploadProgress.cover !== undefined && uploadProgress.cover < 100 && (
+                      <div className="w-full h-1.5 bg-white/10 rounded-full mt-1.5 overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all duration-300" style={{ width: uploadProgress.cover + '%' }} />
+                      </div>
+                    )}
+                  </div>
             </div>
           </div>
           <div><label className="text-xs text-gray-400 block mb-1">专辑名称</label>
@@ -297,7 +366,31 @@ export default function AdminAlbumsPage() {
                   <div className="w-20 h-20 rounded-xl bg-white/5 flex items-center justify-center overflow-hidden">
                     {form.coverUrl ? <img src={form.coverUrl} className="w-full h-full object-cover" alt="" /> : <Disc3 size={28} className="text-gray-600" />}
                   </div>
-                  <input type="file" accept="image/*" onChange={handleCoverUpload} className="text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-white/10 file:text-white hover:file:bg-white/20" />
+                  <div className="flex-1 min-w-0">
+                    <input type="file" accept="image/*" onChange={handleCoverUpload} className="text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-white/10 file:text-white hover:file:bg-white/20" />
+                  <div className="flex-1 min-w-0">
+                    {uploadedFileName.cover && (
+                      <p className="text-[11px] text-green-400 mt-1.5 truncate">
+                        {uploadProgress.cover === 100 ? "✅ " : ""}{uploadedFileName.cover}
+                      </p>
+                    )}
+                    {uploadProgress.cover !== undefined && uploadProgress.cover < 100 && (
+                      <div className="w-full h-1.5 bg-white/10 rounded-full mt-1.5 overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all duration-300" style={{ width: uploadProgress.cover + "%" }} />
+                      </div>
+                    )}
+                  </div>
+                    {uploadedFileName.cover && (
+                      <p className="text-[11px] text-green-400 mt-1.5 truncate">
+                        {uploadProgress.cover === 100 ? '✅ ' : ''}{uploadedFileName.cover}
+                      </p>
+                    )}
+                    {uploadProgress.cover !== undefined && uploadProgress.cover < 100 && (
+                      <div className="w-full h-1.5 bg-white/10 rounded-full mt-1.5 overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all duration-300" style={{ width: uploadProgress.cover + '%' }} />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -324,10 +417,22 @@ export default function AdminAlbumsPage() {
                       <div className="grid grid-cols-2 gap-2">
                         <input value={s.title} onChange={e => updSong(i, 'title', e.target.value)} className="col-span-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accent-purple/50" placeholder="歌曲名称" />
                         <input value={s.artist} onChange={e => updSong(i, 'artist', e.target.value)} className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accent-purple/50" placeholder="艺术家" />
-                        <label className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-gray-400 cursor-pointer hover:bg-white/10 truncate">
-                          <Upload size={14} />{s.audioUrl ? '已上传' : '上传音频'}
-                          <input type="file" accept="audio/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleAudioUpload(i, f) }} />
-                        </label>
+                        <div className="col-span-2">
+                          <label className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-gray-400 cursor-pointer hover:bg-white/10 truncate">
+                            <Upload size={14} />{s.audioUrl ? '已上传' : '上传音频'}
+                            <input type="file" accept="audio/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleAudioUpload(i, f) }} />
+                          </label>
+                          {uploadedFileName['audio_' + i] && (
+                            <p className="text-[11px] text-green-400 mt-1 truncate">
+                              {uploadProgress['audio_' + i] === 100 ? '✅ ' : ''}{uploadedFileName['audio_' + i]}
+                            </p>
+                          )}
+                          {uploadProgress['audio_' + i] !== undefined && uploadProgress['audio_' + i] < 100 && (
+                            <div className="w-full h-1.5 bg-white/10 rounded-full mt-1.5 overflow-hidden">
+                              <div className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all duration-300" style={{ width: uploadProgress['audio_' + i] + '%' }} />
+                            </div>
+                          )}
+                        </div>
                       </div>
                       <input value={s.description} onChange={e => updSong(i, 'description', e.target.value)} className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accent-purple/50" placeholder="歌曲说明" />
                       <textarea value={s.lyrics} onChange={e => updSong(i, 'lyrics', e.target.value)} rows={2} className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accent-purple/50 resize-none" placeholder="时间轴歌词" />
@@ -358,6 +463,18 @@ export default function AdminAlbumsPage() {
           </div>
         )}
       </div>
-    </div>
+          {/* Toast notification */}
+      {toast && toast.show && (
+        <div className="fixed bottom-6 right-6 z-50 animate-slide-up">
+          <div className={`flex items-center gap-2.5 px-5 py-3 rounded-xl shadow-2xl backdrop-blur-xl text-sm font-medium transition-all ${
+            toast.type === 'success'
+              ? 'bg-green-600/90 text-white border border-green-500/30'
+              : 'bg-red-600/90 text-white border border-red-500/30'
+          }`}>
+            {toast.type === 'success' ? <CheckCircle size={18} className="text-green-200" /> : <AlertCircle size={18} className="text-red-200" />}
+            {toast.message}
+          </div>
+        </div>
+      )}</div>
   )
 }
