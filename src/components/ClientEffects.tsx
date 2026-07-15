@@ -43,7 +43,7 @@ export default function ClientEffects() {
     <>
       {/* Page enter overlay */}
       <div
-        className="fixed inset-0 z-[100] pointer-events-none bg-[#080808]"
+        className="fixed inset-0 z-40 pointer-events-none bg-[#080808]"
         style={{
           opacity: showTransition ? 1 : 0,
           transition: 'opacity 0.4s ease-out',

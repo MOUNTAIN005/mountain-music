@@ -112,7 +112,7 @@ export default function RankingPage() {
                     ) : (
                       <Play size={18} className="text-gray-500 group-hover:text-white transition-colors" />
                     )}
-                    <div className="hidden sm:flex items-center gap-4 text-xs text-gray-500 tabular-nums">
+                    <div className="flex items-center gap-2 text-xs text-gray-500 tabular-nums">
                       <span>{song.playCount.toLocaleString()} 次播放</span>
                     </div>
                   </div>
