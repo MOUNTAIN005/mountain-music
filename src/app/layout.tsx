@@ -4,6 +4,7 @@ import './globals.css'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import AudioPlayer from '@/components/AudioPlayer'
+import MobileBottomPlayer from '@/components/MobileBottomPlayer'
 import ParticleBackground from '@/components/ParticleBackground'
 import FloatingPlus from '@/components/FloatingPlus'
 import ClientEffects from '@/components/ClientEffects'
@@ -36,6 +37,7 @@ export default function RootLayout({
           <main className="flex-1 w-full">{children}</main>
           <Footer />
         </div>
+        <MobileBottomPlayer />
         <div className="hidden lg:block"><AudioPlayer /></div>
       </body>
     </html>
