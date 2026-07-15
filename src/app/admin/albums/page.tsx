@@ -149,12 +149,15 @@ export default function AdminAlbumsPage() {
         for (const s of form.songs) {
           if (!s.title) continue
           if (s.id) {
-            await fetch(`/api/songs/${s.id}`, {
+            const srId = s.id
+            const sr = await fetch(`/api/songs/${srId}`, {
               method: 'PUT', headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ title: s.title, artist: s.artist || '山影知道', audioUrl: s.audioUrl, description: s.description, lyrics: s.lyrics, genre: '原创', albumId: editingAlbumId, duration: s.duration || 0, isRecommended: s.isRecommended || false }),
             })
+            const sd = await sr.json(); if (!sd.success) throw new Error('更新歌曲失败: ' + (sd.error || ''))
           } else if (s.audioUrl) {
-            await fetch('/api/songs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: s.title, artist: s.artist || '山影知道', audioUrl: s.audioUrl, description: s.description, lyrics: s.lyrics, genre: '原创', albumId: editingAlbumId, isPublished: true, duration: s.duration || 0, isRecommended: s.isRecommended || false }) })
+            const sr = await fetch('/api/songs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: s.title, artist: s.artist || '山影知道', audioUrl: s.audioUrl, description: s.description, lyrics: s.lyrics, genre: '原创', albumId: editingAlbumId, isPublished: true, duration: s.duration || 0, isRecommended: s.isRecommended || false }) })
+            const sd = await sr.json(); if (!sd.success) throw new Error('保存歌曲失败: ' + (sd.error || ''))
           }
         }
         setEditingAlbumId(null)
@@ -164,7 +167,7 @@ export default function AdminAlbumsPage() {
         const d = await r.json()
         if (!d.success) throw new Error('Failed to create album')
         const albumId = d.data.id
-        for (const s of form.songs) { if (!s.title || !s.audioUrl) continue; await fetch('/api/songs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: s.title, artist: s.artist || '山影知道', audioUrl: s.audioUrl, description: s.description, lyrics: s.lyrics, genre: '原创', albumId, isPublished: true, duration: s.duration || 0, isRecommended: false }) }) }
+        for (const s of form.songs) { if (!s.title || !s.audioUrl) continue; const sr = await fetch('/api/songs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: s.title, artist: s.artist || '山影知道', audioUrl: s.audioUrl, description: s.description, lyrics: s.lyrics, genre: '原创', albumId, isPublished: true, duration: s.duration || 0, isRecommended: false }) }); const sd = await sr.json(); if (!sd.success) throw new Error('保存歌曲失败: ' + (sd.error || '')) }
         alert('专辑创建成功！')
       }
       setForm({ title: '', description: '', coverUrl: '', songs: [{ title: '', artist: '山影知道', audioUrl: '', description: '', lyrics: '', isRecommended: false }] })
