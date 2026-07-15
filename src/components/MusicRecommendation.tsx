@@ -119,7 +119,7 @@ export default function MusicRecommendation() {
           <h2 className="text-3xl lg:text-4xl font-bold text-white">推荐音乐试听</h2>
         </motion.div>
         {showSkeleton ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-3 gap-3 sm:gap-6">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={'sk-' + i} className="text-center">
                 <div className="aspect-square rounded-full skeleton-pulse mx-auto max-w-[150px] sm:max-w-[220px] md:max-w-[280px]" />
@@ -234,7 +234,7 @@ export default function MusicRecommendation() {
           </>
         ) : (
           /* ═══ Default: 3x2 grid ═══ */
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
             {displaySongs.map((song, i) => (
               <motion.button key={song.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: i * 0.08 }}

@@ -81,7 +81,7 @@ export default function HeroSection() {
   }
 
   if (!song) return (
-    <section className="relative w-full aspect-video max-h-screen overflow-hidden">
+    <section className="relative w-full h-screen sm:aspect-video sm:max-h-screen overflow-hidden">
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 bg-[#080808]" />
         <div className="absolute inset-0 bg-black/40 backdrop-blur-[8px]" />
@@ -110,7 +110,7 @@ export default function HeroSection() {
 
  return (
     <>
-    <section className="relative w-full aspect-video max-h-screen overflow-hidden">
+    <section className="relative w-full h-screen sm:aspect-video sm:max-h-screen overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-110 will-change-transform"
@@ -197,8 +197,8 @@ export default function HeroSection() {
             {/* Play button */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.5 }}>
               <button onClick={handlePlayPause}
-                className="group relative inline-flex items-center gap-3 px-8 py-3 sm:px-10 sm:py-4 rounded-full bg-white text-black font-medium overflow-hidden transition-all hover:bg-white/90 hover:shadow-xl hover:shadow-white/10">
-                <span>{isThisPlaying ? <Pause size={20} /> : <Play size={20} />}</span>
+                className="group relative inline-flex items-center gap-3 px-5 py-2 sm:px-10 sm:py-4 rounded-full bg-white text-black font-medium overflow-hidden transition-all hover:bg-white/90 hover:shadow-xl hover:shadow-white/10">
+                <span>{isThisPlaying ? <Pause size={16} /> : <Play size={16} />}</span>
                 <span>{isThisPlaying ? '暂停' : '播放主打曲'}</span>
 
               </button>
