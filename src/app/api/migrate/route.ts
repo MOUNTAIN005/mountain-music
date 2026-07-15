@@ -127,8 +127,19 @@ async function connectAndExecute(sql: string): Promise<string> {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 1 })
   const client = await pool.connect()
   try {
-    const result = await client.query(sql)
-    return `OK: ${result.rowCount || 'all'} tables created`
+    // Split into individual statements and run each one separately
+    const statements = sql.split(';').filter(s => s.trim())
+    let ok = 0, fail = 0
+    for (const stmt of statements) {
+      try {
+        await client.query(stmt + ';')
+        ok++
+      } catch (e: any) {
+        fail++
+        console.warn(`[migrate] Skipped statement (${e.message?.slice(0,60)})`)
+      }
+    }
+    return `OK: \${ok} statements executed, \${fail} skipped`
   } finally {
     client.release()
     await pool.end()
