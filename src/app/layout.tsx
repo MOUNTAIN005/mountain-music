@@ -36,7 +36,7 @@ export default function RootLayout({
           <main className="flex-1 w-full">{children}</main>
           <Footer />
         </div>
-        <AudioPlayer />
+        <div className="hidden lg:block"><AudioPlayer /></div>
       </body>
     </html>
   )
