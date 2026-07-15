@@ -113,14 +113,14 @@ export default function AlbumSection() {
                       <h3 className="text-base font-semibold text-white mb-4">
                         <span className="text-gray-400 font-normal text-sm">专辑名：</span>{album.title}
                       </h3>
-                     <div className="space-y-0.5">
+                     <div className="space-y-0">
                        {(album.songs || []).map((s: any) => {
                          const isThis = currentSong?.id === s.id && isPlaying
                          const hasAudio = !!s.audioUrl
                          return (
                            <button key={s.id}
                              onClick={hasAudio ? () => { setSelectedKey(`${album.id}-${s.id}`); play({...s}) } : undefined}
-                             className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors text-left group ${hasAudio ? 'hover:bg-white/5 cursor-pointer' : 'cursor-default'}`}>
+                             className={`w-full flex items-center gap-3 px-3 py-1 rounded-xl transition-colors text-left group ${hasAudio ? 'hover:bg-white/5 cursor-pointer' : 'cursor-default'}`}>
                              <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0 transition-colors">
                                {hasAudio ? (isThis ? (
                                  <div className="flex gap-0.5 items-end h-2.5">
