@@ -122,7 +122,7 @@ export default function MusicRecommendation() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={'sk-' + i} className="text-center">
-                <div className="aspect-square rounded-full skeleton-pulse mx-auto max-w-[280px]" />
+                <div className="aspect-square rounded-full skeleton-pulse mx-auto max-w-[150px] sm:max-w-[220px] md:max-w-[280px]" />
                 <div className="mt-3 space-y-1.5 px-4">
                   <div className="h-3 w-3/4 skeleton-pulse rounded mx-auto" />
                   <div className="h-2 w-1/2 skeleton-pulse rounded mx-auto" />
@@ -140,7 +140,7 @@ export default function MusicRecommendation() {
                       </button>
             <div className="flex flex-col gap-8 items-center justify-center mb-10 max-w-2xl mx-auto">
              {/* Left: selected vinyl record */}
-              <div className="w-56 sm:w-64 lg:w-72 shrink-0 mx-auto">
+              <div className="w-36 sm:w-56 lg:w-72 shrink-0 mx-auto">
 <AnimatePresence mode="wait">
                   <motion.div
                     key={selectedSong.id}
@@ -242,7 +242,7 @@ export default function MusicRecommendation() {
                 className={'group text-center focus:outline-none ' + (!song.audioUrl ? 'opacity-60' : '')}
                 style={{ transform: `rotate(${((i % 3) - 1) * 2.5}deg)`, marginTop: i >= 3 ? '1.5rem' : '0' }}
               >
-                <div className="aspect-square relative mx-auto max-w-[280px]">
+                <div className="aspect-square relative mx-auto max-w-[150px] sm:max-w-[220px] md:max-w-[280px]">
                   {/* Spotlight halo */}
                   <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-700 scale-75 group-hover:scale-110"
                     style={{ background: `radial-gradient(ellipse at center, rgba(${spotColors[i]},0.2) 0%, rgba(${spotColors[i]},0.08) 40%, transparent 70%)`, filter: 'blur(8px)' }}
