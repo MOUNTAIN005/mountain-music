@@ -231,6 +231,21 @@ export default function HeroSection() {
           </div>
         </div>
     </div>
+      {/* Mobile lyrics at bottom */}
+      <div className="lg:hidden absolute bottom-0 left-0 right-0 z-20 px-6 pb-8 pt-12 bg-gradient-to-t from-[#080808] via-[#080808]/80 to-transparent pointer-events-none">
+        <AnimatePresence mode="wait">
+          {isThisPlaying && currentLineIdx >= 0 ? (
+            <motion.p key={currentLineIdx} initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+              className="text-base text-white/90 font-serif tracking-wide text-center"
+              style={{ textShadow: '0 0 30px rgba(139,92,246,0.2)' }}>
+              {lyricsLines[currentLineIdx]?.text}
+            </motion.p>
+          ) : (
+            <p className="text-center text-sm text-gray-600 italic">点击播放查看歌词</p>
+          )}
+        </AnimatePresence>
+      </div>
     </section>
     {/* Scroll-down indicator */}
     <motion.div
