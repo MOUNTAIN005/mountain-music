@@ -234,10 +234,22 @@ export default function AdminAlbumsPage() {
                   <div className="grid grid-cols-2 gap-2">
                     <input value={s.title} onChange={e => updSong(i, 'title', e.target.value)} className="col-span-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accent-purple/50" placeholder="歌曲名称" />
                     <input value={s.artist} onChange={e => updSong(i, 'artist', e.target.value)} className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accent-purple/50" placeholder="艺术家" />
-                    <label className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-gray-400 cursor-pointer hover:bg-white/10 truncate">
-                      <Upload size={14} />{s.audioUrl ? '已上传音频' : '上传音频'}
-                      <input type="file" accept="audio/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleAudioUpload(i, f) }} />
-                    </label>
+                    <div className="col-span-2">
+                      <label className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-gray-400 cursor-pointer hover:bg-white/10 truncate">
+                        <Upload size={14} />{s.audioUrl ? '已上传音频' : '上传音频'}
+                        <input type="file" accept="audio/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleAudioUpload(i, f) }} />
+                      </label>
+                      {uploadedFileName['audio_' + i] && (
+                        <p className="text-[11px] text-green-400 mt-1 truncate">
+                          {uploadProgress['audio_' + i] === 100 ? '✅ ' : ''}{uploadedFileName['audio_' + i]}
+                        </p>
+                      )}
+                      {uploadProgress['audio_' + i] !== undefined && uploadProgress['audio_' + i] < 100 && (
+                        <div className="w-full h-1.5 bg-white/10 rounded-full mt-1.5 overflow-hidden">
+                          <div className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all duration-300" style={{ width: uploadProgress['audio_' + i] + '%' }} />
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <input value={s.description} onChange={e => updSong(i, 'description', e.target.value)} className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accent-purple/50" placeholder="歌曲说明" />
                   <textarea value={s.lyrics} onChange={e => updSong(i, 'lyrics', e.target.value)} rows={2} className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accent-purple/50 resize-none" placeholder="时间轴歌词（如 [00:15.030]词：）" />
