@@ -365,8 +365,10 @@ export default function AdminAlbumsPage() {
                 <div className="flex items-center gap-4">
                   <div className="w-20 h-20 rounded-xl bg-white/5 flex items-center justify-center overflow-hidden">
                     {form.coverUrl ? <img src={form.coverUrl} className="w-full h-full object-cover" alt="" /> : <Disc3 size={28} className="text-gray-600" />}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <input type="file" accept="image/*" onChange={handleCoverUpload} className="text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-white/10 file:text-white hover:file:bg-white/20" />
+                  </div>
                     {uploadedFileName.cover && (
                       <p className="text-[11px] text-green-400 mt-1.5 truncate">
                         {uploadProgress.cover === 100 ? '✅ ' : ''}{uploadedFileName.cover}
@@ -447,7 +449,6 @@ export default function AdminAlbumsPage() {
                 </button>
               </div>
             </div>
-          </div>
         )}
       </div>
           {/* Toast notification */}
