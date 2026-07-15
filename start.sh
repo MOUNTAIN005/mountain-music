@@ -22,8 +22,11 @@ if [ -f "server.js" ]; then
   exec node server.js
 elif [ -f ".next/standalone/server.js" ]; then
   exec node .next/standalone/server.js
+elif command -v next &> /dev/null || [ -f "node_modules/.bin/next" ]; then
+  echo "[start.sh] Using next start (nixpacks mode)..."
+  exec npx next start
 else
-  echo "[start.sh] ERROR: server.js not found in .next/standalone/ or ./"
+  echo "[start.sh] ERROR: no server found"
   ls -la
   exit 1
 fi
