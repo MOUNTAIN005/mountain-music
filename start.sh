@@ -18,10 +18,10 @@ fi
 
 # Start Next.js standalone server (handle different deployment paths)
 echo "[start.sh] Starting Next.js standalone server..."
-if [ -f ".next/standalone/server.js" ]; then
-  exec node .next/standalone/server.js
-elif [ -f "server.js" ]; then
+if [ -f "server.js" ]; then
   exec node server.js
+elif [ -f ".next/standalone/server.js" ]; then
+  exec node .next/standalone/server.js
 else
   echo "[start.sh] ERROR: server.js not found in .next/standalone/ or ./"
   ls -la
