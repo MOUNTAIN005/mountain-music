@@ -110,7 +110,7 @@ export default function AlbumSection() {
                       <h3 className="text-base font-semibold text-white mb-4 truncate">
                         <span className="text-gray-400 font-normal text-sm">专辑名：</span>{album.title}
                       </h3>
-                     <div className="space-y-1">
+                     <div className="space-y-0.5">
                        {(album.songs || []).map((s: any) => {
                          const isThis = currentSong?.id === s.id && isPlaying
                          const hasAudio = !!s.audioUrl
@@ -134,9 +134,9 @@ export default function AlbumSection() {
                              </div>
                              <div className="flex-1 min-w-0">
                                {hasAudio ? (
-                                 <span className="text-xs text-white leading-snug block break-words">{s.title}</span>
+                                 <span className="text-xs text-white truncate block">{s.title}</span>
                                ) : (
-                                 <span className="text-xs text-gray-500 leading-snug block">
+                                 <span className="text-xs text-gray-500 truncate block">
                                    {s.title}{s.description ? ` — ${s.description}` : ''}
                                  </span>
                                )}
