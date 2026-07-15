@@ -1,15 +1,8 @@
 'use client'
 
-import { useRef, useCallback } from 'react'
+import { useRef } from 'react'
 import { useAudioPlayer } from '@/hooks/useAudioPlayer'
 import { Play, Pause, SkipBack, SkipForward, Repeat, Repeat1 } from 'lucide-react'
-
-const formatTime = (sec: number) => {
-  if (!sec) return '0:00'
-  const m = Math.floor(sec / 60)
-  const s = Math.floor(sec % 60)
-  return `${m}:${s.toString().padStart(2, '0')}`
-}
 
 export default function MobileBottomPlayer() {
   const progressRef = useRef<HTMLDivElement>(null)
@@ -39,47 +32,44 @@ export default function MobileBottomPlayer() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 px-3 pt-3 pb-2.5">
+      <div className="flex items-center gap-1.5 px-3 pt-3 pb-2.5">
         {/* Album art */}
         {currentSong.coverUrl ? (
-          <img src={currentSong.coverUrl} className="w-7 h-7 rounded-full object-cover shrink-0" alt="" />
+          <img src={currentSong.coverUrl} className="w-6 h-6 rounded-full object-cover shrink-0" alt="" />
         ) : (
-          <div className="w-7 h-7 rounded-full bg-accent-purple/20 flex items-center justify-center shrink-0">
-            <span className="text-[10px] opacity-50">♫</span>
+          <div className="w-6 h-6 rounded-full bg-accent-purple/20 flex items-center justify-center shrink-0">
+            <span className="text-[9px] opacity-50">♫</span>
           </div>
         )}
 
-        {/* Song info + time */}
-        <div className="flex-1 min-w-0 mr-1">
+        {/* Song info - width limited */}
+        <div className="flex-1 min-w-0 max-w-[40%]">
           <p className="text-xs text-white font-medium truncate leading-tight">{currentSong.title}</p>
-          <div className="flex items-center gap-1.5">
-            <p className="text-[10px] text-gray-500 truncate leading-tight">{currentSong.artist || '山影知道'}</p>
-            <span className="text-[9px] text-gray-600 tabular-nums">{formatTime(Math.floor(currentTime))}/{formatTime(Math.floor(duration))}</span>
-          </div>
+          <p className="text-[10px] text-gray-500 truncate leading-tight">{currentSong.artist || '山影知道'}</p>
         </div>
 
-        {/* Controls */}
-        <div className="flex items-center gap-1 shrink-0">
+        {/* Controls - centered */}
+        <div className="flex items-center gap-0.5 shrink-0 ml-auto">
           <button
             onClick={() => setRepeatMode(repeatMode === 'none' ? 'one' : 'none')}
-            className={`p-1 rounded transition-colors ${repeatMode === 'one' ? 'text-accent-purple' : 'text-gray-500'}`}
+            className={`p-0.5 rounded transition-colors ${repeatMode === 'one' ? 'text-accent-purple' : 'text-gray-500'}`}
           >
-            {repeatMode === 'one' ? <Repeat1 size={15} /> : <Repeat size={15} />}
+            {repeatMode === 'one' ? <Repeat1 size={13} /> : <Repeat size={13} />}
           </button>
 
-          <button onClick={prev} className="p-1 text-gray-400" title="\u4e0a\u4e00\u66f2">
-            <SkipBack size={15} />
+          <button onClick={prev} className="p-0.5 text-gray-400">
+            <SkipBack size={13} />
           </button>
 
           <button
             onClick={() => (isPlaying ? pause() : resume())}
-            className="p-1.5 rounded-full bg-white text-black"
+            className="p-1 rounded-full bg-white text-black mx-0.5"
           >
-            {isPlaying ? <Pause size={15} /> : <Play size={15} />}
+            {isPlaying ? <Pause size={14} /> : <Play size={14} />}
           </button>
 
-          <button onClick={next} className="p-1 text-gray-400" title="\u4e0b\u4e00\u66f2">
-            <SkipForward size={15} />
+          <button onClick={next} className="p-0.5 text-gray-400">
+            <SkipForward size={13} />
           </button>
         </div>
       </div>
