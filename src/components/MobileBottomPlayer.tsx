@@ -49,7 +49,7 @@ export default function MobileBottomPlayer() {
         </div>
 
         {/* Controls - centered */}
-        <div className="flex items-center gap-[15px] shrink-0 pl-[60px] ">
+        <div className="flex items-center gap-[15px] shrink-0 pl-[90px] ">
           <button
             onClick={() => setRepeatMode(repeatMode === 'none' ? 'one' : 'none')}
             className={`p-0.5 rounded transition-colors ${repeatMode === 'one' ? 'text-accent-purple' : 'text-gray-500'}`}
