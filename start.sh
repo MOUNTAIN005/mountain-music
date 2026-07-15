@@ -1,10 +1,6 @@
 #!/bin/bash
-# Railway startup script - simplified
-
-if [ -z "$DATABASE_URL" ]; then
-  export DATABASE_URL="postgresql://postgres:jequirity0505@db.lyjpdfmefvayyzngetpw.supabase.co:5432/postgres?sslmode=require"
-  echo "[start.sh] DATABASE_URL not set - using Supabase fallback"
-fi
-
+echo "[start.sh] Starting up... DATABASE_URL set: $([ -n "$DATABASE_URL" ] && echo yes || echo no)"
+echo "[start.sh] Node version: $(node --version)"
+ls -la /app/node_modules/.bin/next 2>/dev/null && echo "[start.sh] next binary found" || echo "[start.sh] next binary NOT found"
 echo "[start.sh] Starting Next.js server..."
-exec pnpm next start
+exec node /app/node_modules/.bin/next start
