@@ -135,12 +135,22 @@ export default function Footer() {
                     </button>
                     <p className="text-[10px] text-gray-600 text-center mt-1.5">{platformLabels[social.platform] || social.platform}</p>
 
-                    {/* QR Code Popup */}
-                    {currentPlatform === social.platform && social.qrCodeUrl && (
-                      <div className="text-center">
-                        <p className="text-xs text-gray-500 mt-1">{social.accountName || social.name}</p>
-                      </div>
-                    )}
+                    {/* Account name tooltip (on hover) */}
+                    <AnimatePresence>
+                      {currentPlatform === social.platform && social.qrCodeUrl && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 6, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 6, scale: 0.95 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-40 pointer-events-none"
+                        >
+                          <div className="px-2.5 py-1 rounded-lg glass border border-white/10 shadow-lg text-center whitespace-nowrap">
+                            <p className="text-[11px] text-gray-300 font-medium">{social.accountName || social.name}</p>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 )
               })}
