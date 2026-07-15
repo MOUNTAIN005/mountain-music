@@ -8,7 +8,7 @@ nixPkgs = ["nodejs_22", "python3"]
 cmds = ["pnpm install"]
 
 [phases.build]
-cmds = ["node prisma/prepare-db.js", "prisma generate --schema=prisma/schema.pg.prisma", "next build"]
+cmds = ["node prisma/prepare-db.js", "npx prisma generate --schema=prisma/schema.pg.prisma", "npx next build"]
 
 [start]
 cmd = "sh start.sh"
