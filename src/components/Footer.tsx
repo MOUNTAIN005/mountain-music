@@ -87,7 +87,6 @@ export default function Footer() {
   }
 
   const currentPlatform = activePopup || hoveredPlatform
-  const activeSocial = activePopup ? socials.find(s => s.platform === activePopup) : null
 
   return (
     <footer className="relative z-10 border-t border-white/5 bg-[#080808]">
@@ -135,19 +134,28 @@ export default function Footer() {
                     </button>
                     <p className="text-[10px] text-gray-600 text-center mt-1.5">{platformLabels[social.platform] || social.platform}</p>
 
-                    {/* Account name tooltip (on hover) */}
+                    {/* QR Code Popup */}
                     <AnimatePresence>
                       {currentPlatform === social.platform && social.qrCodeUrl && (
                         <motion.div
-                          initial={{ opacity: 0, y: 6, scale: 0.95 }}
+                          initial={{ opacity: 0, y: 8, scale: 0.95 }}
                           animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 6, scale: 0.95 }}
-                          transition={{ duration: 0.15 }}
-                          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-40 pointer-events-none"
+                          exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-50"
                         >
-                          <div className="px-2.5 py-1 rounded-lg glass border border-white/10 shadow-lg text-center whitespace-nowrap">
-                            <p className="text-[11px] text-gray-300 font-medium">{social.accountName || social.name}</p>
+                          <div className="p-3 rounded-xl glass border border-white/10 shadow-xl shadow-black/30 text-center min-w-[160px]">
+                            <div className="w-32 h-32 mx-auto rounded-lg overflow-hidden bg-white/5 flex items-center justify-center">
+                              <img
+                                src={social.qrCodeUrl}
+                                alt={`${social.name}二维码`}
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                            <p className="text-xs text-gray-300 mt-2 font-medium">{social.accountName || social.name}</p>
                           </div>
+                          {/* Arrow pointing down */}
+                          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rotate-45 bg-[#121212] border-r border-b border-white/10" />
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -167,38 +175,6 @@ export default function Footer() {
           </p>
         </div>
       </div>
-            {/* Global QR Code Modal */}
-        <AnimatePresence>
-          {activeSocial?.qrCodeUrl && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm"
-              onClick={() => setActivePopup(null)}
-            >
-              <motion.div
-                initial={{ opacity: 0, scale: 0.92 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.92 }}
-                transition={{ duration: 0.2 }}
-                className="bg-[#121212] rounded-2xl p-6 border border-white/10 shadow-2xl shadow-black/40 text-center"
-                onClick={e => e.stopPropagation()}
-              >
-                <div className="w-52 h-52 mx-auto rounded-xl overflow-hidden bg-white/5 flex items-center justify-center mb-3">
-                  <img
-                    src={activeSocial.qrCodeUrl}
-                    alt={`${activeSocial.name}二维码`}
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                <p className="text-sm text-gray-300 font-medium">{activeSocial.accountName || activeSocial.name}</p>
-                <p className="text-[10px] text-gray-600 mt-1.5">点击关闭</p>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
     </footer>
   )
 }
