@@ -304,14 +304,7 @@ export default function StoriesSection() {
                         </button>
                         <span className="text-[11px] text-gray-300 truncate flex-1 min-w-0 font-medium">{story.songTitle}</span>
                       </div>
-                      {story.lyrics && (
-                        <p className="text-[10px] text-gray-500 truncate pl-9">
-                          {(() => {
-                            const firstLine = story.lyrics?.split('\n')[0] || '';
-                            return firstLine.replace(/^\[\d+:\d+[\.\d]*\]\s*/, '');
-                          })()}
-                        </p>
-                      )}
+
                     </div>
                   )}
                 </div>
