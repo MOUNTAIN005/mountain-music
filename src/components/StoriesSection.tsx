@@ -24,6 +24,7 @@ export default function StoriesSection() {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [formOpen, setFormOpen] = useState(false)
+  const [expandedStory, setExpandedStory] = useState<number | null>(null)
   const [formData, setFormData] = useState({ name: '', email: '', title: '', content: '' })
   const sectionRef = useRef<HTMLDivElement>(null)
   const btnRef = useRef<HTMLButtonElement>(null)
@@ -226,7 +227,7 @@ export default function StoriesSection() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {/* Loading skeleton */}
           {!loaded && Array.from({ length: 2 }).map((_, i) => (
-            <div key={`sk-st-${i}`} className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 aspect-[4/3]">
+            <div key={`sk-st-${i}`} className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 aspect-square">
               <div className="flex items-start gap-4">
                 <div className="hidden sm:block w-10 h-10 rounded-full skeleton-pulse shrink-0" />
                 <div className="flex-1 space-y-3">
@@ -257,7 +258,9 @@ export default function StoriesSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: Math.min(idx * 0.1, 0.5) }}
-                className="group relative p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] hover:border-white/10 hover:shadow-lg hover:shadow-accent-purple/[0.05] hover:-translate-y-0.5 transition-all duration-300 aspect-[4/3] flex flex-col"
+                onClick={() => setExpandedStory(expandedStory === story.id ? null : story.id)}
+                style={{ cursor: 'pointer' }}
+                className="group relative p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] hover:border-white/10 hover:shadow-lg hover:shadow-accent-purple/[0.05] hover:-translate-y-0.5 transition-all duration-300 aspect-square flex flex-col"
               >
                 {/* Left accent bar */}
                 <div className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full bg-gradient-to-b from-accent-purple to-accent-blue opacity-0 group-hover:opacity-100 transition-all duration-500" />
@@ -283,7 +286,7 @@ export default function StoriesSection() {
                     </div>
 
                     {/* Content */}
-                    <p className="text-gray-400 text-xs leading-relaxed line-clamp-4 group-hover:line-clamp-none transition-all duration-500">
+                    <p className="text-gray-400 text-xs leading-relaxed line-clamp-3">
                       {story.content}
                     </p>
                   </div>
@@ -293,7 +296,7 @@ export default function StoriesSection() {
                     <div className="mt-auto pt-3 border-t border-white/5 space-y-1">
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={(e) => { e.preventDefault(); playStorySong(story) }}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); playStorySong(story) }}
                           className="w-7 h-7 rounded-full bg-accent-purple/80 flex items-center justify-center shrink-0 hover:bg-accent-purple hover:shadow-lg hover:shadow-accent-purple/20 transition-all"
                         >
                           {isCurrentSong(story) && isPlaying ? (
@@ -311,6 +314,67 @@ export default function StoriesSection() {
               </motion.div>
             ))}
           </AnimatePresence>
+        {/* Story detail modal */}
+        <AnimatePresence>
+          {expandedStory !== null && (() => {
+            const story = stories.find(s => s.id === expandedStory)
+            if (!story) return null
+            return (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+                onClick={() => setExpandedStory(null)}
+              >
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.92 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.92 }}
+                  transition={{ duration: 0.2 }}
+                  className="bg-[#121212] rounded-2xl p-6 border border-white/10 shadow-2xl shadow-black/40 max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <div className="flex items-start justify-between mb-4 gap-4">
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-bold text-white">{story.title}</h3>
+                      <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                        <span className="text-gray-400">{story.author}</span>
+                        <span className="w-1 h-1 rounded-full bg-gray-700 shrink-0" />
+                        <span>{formatDate(story.createdAt)}</span>
+                      </div>
+                    </div>
+                    <button onClick={() => setExpandedStory(null)}
+                      className="p-1.5 rounded-lg bg-white/5 text-gray-500 hover:text-white hover:bg-white/10 transition-all shrink-0">
+                      <X size={16} />
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">{story.content}</p>
+                  {story.songTitle && (() => {
+                    const storyItem = stories.find(s => s.id === expandedStory)
+                    if (!storyItem) return null
+                    return (
+                      <div className="mt-4 pt-4 border-t border-white/5 flex items-center gap-2">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); playStorySong(storyItem) }}
+                          className="w-8 h-8 rounded-full bg-accent-purple/80 flex items-center justify-center shrink-0 hover:bg-accent-purple transition-all"
+                        >
+                          {isCurrentSong(storyItem) && isPlaying ? (
+                            <Pause size={13} className="text-white" />
+                          ) : (
+                            <Play size={13} className="text-white ml-0.5" />
+                          )}
+                        </button>
+                        <span className="text-sm text-gray-300">{storyItem.songTitle}</span>
+                      </div>
+                    )
+                  })()}
+                </motion.div>
+              </motion.div>
+            )
+          })()}
+        </AnimatePresence>
         </div>
       </div>
     </section>
