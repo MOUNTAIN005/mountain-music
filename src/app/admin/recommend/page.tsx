@@ -7,7 +7,7 @@ import UploadField from '@/components/UploadField'
 interface RecSong {
   title: string; artist: string; coverUrl: string; audioUrl: string; description: string; lyrics: string; album: string
 }
-interface SongOption { id: number; title: string; artist: string; audioUrl: string; description: string; lyrics: string; album?: { title: string } }
+interface SongOption { id: number; title: string; artist: string; coverUrl: string; audioUrl: string; description: string; lyrics: string; album?: { title: string } }
 
 export default function AdminRecommendPage() {
   const [allSongs, setAllSongs] = useState<SongOption[]>([])
@@ -22,7 +22,7 @@ export default function AdminRecommendPage() {
         const flat: SongOption[] = []
         for (const a of d.data) {
           for (const s of (a.songs || [])) {
-            flat.push({ id: s.id, title: s.title, artist: s.artist, audioUrl: s.audioUrl || '', description: s.description || '', lyrics: s.lyrics || '', album: a })
+            flat.push({ id: s.id, title: s.title, artist: s.artist, coverUrl: s.coverUrl || '', audioUrl: s.audioUrl || '', description: s.description || '', lyrics: s.lyrics || '', album: a })
           }
         }
         setAllSongs(flat)
@@ -44,7 +44,7 @@ export default function AdminRecommendPage() {
     s[idx] = {
       title: option.title,
       artist: option.artist || '山影知道',
-      coverUrl: s[idx].coverUrl, // keep existing cover
+      coverUrl: option.coverUrl || s[idx].coverUrl,
       audioUrl: option.audioUrl || '',
       description: option.description || '',
       lyrics: option.lyrics || '',
