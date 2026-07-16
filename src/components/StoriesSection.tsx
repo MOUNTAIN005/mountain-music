@@ -325,15 +325,15 @@ export default function StoriesSection() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
-                className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+                className="fixed inset-0 z-[60] flex items-center bg-black/60 backdrop-blur-sm"
                 onClick={() => setExpandedStory(null)}
               >
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.92 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.92 }}
-                  transition={{ duration: 0.2 }}
-                  className="bg-[#121212] rounded-2xl p-6 border border-white/10 shadow-2xl shadow-black/40 max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto"
+                  initial={{ opacity: 0, x: -24 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -24 }}
+                  transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+                  className="bg-[#121212] rounded-r-2xl p-6 border border-white/10 shadow-2xl shadow-black/40 w-2/3 ml-0 max-h-[85vh] overflow-y-auto"
                   onClick={e => e.stopPropagation()}
                 >
                   <div className="flex items-start justify-between mb-4 gap-4">
