@@ -114,6 +114,17 @@ CREATE TABLE IF NOT EXISTS "SocialLink" (
     "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+
+-- Alter existing Story table to add missing columns
+ALTER TABLE "Story" ADD COLUMN IF NOT EXISTS "isRead" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "Story" ADD COLUMN IF NOT EXISTS "isDisplayed" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "Story" ADD COLUMN IF NOT EXISTS "isFeatured" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "Story" ADD COLUMN IF NOT EXISTS "songId" INTEGER REFERENCES "Song"(id) ON DELETE SET NULL;
+ALTER TABLE "Story" ADD COLUMN IF NOT EXISTS "songTitle" TEXT;
+ALTER TABLE "Story" ADD COLUMN IF NOT EXISTS "lyrics" TEXT;
+ALTER TABLE "Story" ADD COLUMN IF NOT EXISTS "submittedBy" TEXT;
+ALTER TABLE "Story" ADD COLUMN IF NOT EXISTS "submitterEmail" TEXT;
+ALTER TABLE "Story" ADD COLUMN IF NOT EXISTS "attachmentUrl" TEXT;
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_song_album ON "Song"("albumId");
 CREATE INDEX IF NOT EXISTS idx_story_song ON "Story"("songId");
@@ -139,7 +150,7 @@ async function connectAndExecute(sql: string): Promise<string> {
         console.warn(`[migrate] Skipped statement (${e.message?.slice(0,60)})`)
       }
     }
-    return `OK: \${ok} statements executed, \${fail} skipped`
+    return `OK: ${ok} statements executed, ${fail} skipped`
   } finally {
     client.release()
     await pool.end()
