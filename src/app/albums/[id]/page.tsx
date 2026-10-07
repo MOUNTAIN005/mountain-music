@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 import { Music, Play, Calendar, Disc3, ChevronLeft } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
@@ -76,9 +77,15 @@ export default function AlbumDetailPage() {
         {/* Album header */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
           className="flex flex-col md:flex-row gap-8 mb-12">
-          <div className="w-48 h-48 md:w-64 md:h-64 rounded-2xl overflow-hidden bg-white/5 flex items-center justify-center shrink-0">
+          <div className="w-48 h-48 md:w-64 md:h-64 rounded-2xl overflow-hidden bg-white/5 flex items-center justify-center shrink-0 relative">
             {album.coverUrl ? (
-              <img src={album.coverUrl} alt={album.title} className="w-full h-full object-cover" />
+              <Image
+                src={album.coverUrl}
+                alt={album.title}
+                fill
+                sizes="(max-width: 768px) 192px, 256px"
+                className="object-cover"
+              />
             ) : (
               <Disc3 size={64} className="text-gray-600" />
             )}

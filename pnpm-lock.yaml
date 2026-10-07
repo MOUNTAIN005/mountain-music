@@ -41,6 +41,9 @@ importers:
       pg:
         specifier: ^8.22.0
         version: 8.22.0
+      postgres:
+        specifier: ^3.4.9
+        version: 3.4.9
       prisma:
         specifier: ^5.20.0
         version: 5.20.0
@@ -3270,6 +3273,10 @@ packages:
   postgres-interval@1.1.0:
     resolution: {integrity: sha512-txJzyrdoPw5F06xk3BEtzl46JCr6qU2DM8gfulxBFgqGKmfREbrcFyVqllttHuqWtafoBmowgJtGjm6kPGA/bg==}
     engines: {node: '>=0.10.0'}
+
+  postgres@3.4.9:
+    resolution: {integrity: sha512-GD3qdB0x1z9xgFI6cdRD6xu2Sp2WCOEoe3mtnyB5Ee0XrrL5Pe+e4CCnJrRMnL1zYtRDZmQQVbvOttLnKDLnaw==}
+    engines: {node: '>=12'}
 
   prelude-ls@1.1.2:
     resolution: {integrity: sha512-ESF23V4SKG6lVSGZgYNpbsiaAkdab6ZgOxe52p7+Kid3W3u3bxR4Vfd/o21dmN7jSt0IwgZ4v5MUd26FEtXE9w==}
@@ -7135,6 +7142,8 @@ snapshots:
   postgres-interval@1.1.0:
     dependencies:
       xtend: 4.0.2
+
+  postgres@3.4.9: {}
 
   prelude-ls@1.1.2: {}
 

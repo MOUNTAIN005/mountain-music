@@ -1,14 +1,17 @@
 'use client'
 
 import { useRef } from 'react'
+import { usePathname } from 'next/navigation'
 import { useAudioPlayer } from '@/hooks/useAudioPlayer'
 import { Play, Pause, SkipBack, SkipForward, Repeat, Repeat1 } from 'lucide-react'
+import Image from 'next/image'
 
 export default function MobileBottomPlayer() {
+  const pathname = usePathname()
   const progressRef = useRef<HTMLDivElement>(null)
   const { currentSong, isPlaying, pause, resume, next, prev, repeatMode, setRepeatMode, currentTime, duration, seek } = useAudioPlayer()
 
-  if (!currentSong) return null
+  if (pathname === '/' || !currentSong) return null
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!duration) return
@@ -35,7 +38,13 @@ export default function MobileBottomPlayer() {
       <div className="flex items-center gap-1.5 px-3 pt-3 pb-2.5">
         {/* Album art */}
         {currentSong.coverUrl ? (
-          <img src={currentSong.coverUrl} className="w-6 h-6 rounded-full object-cover shrink-0" alt="" />
+          <Image
+            src={currentSong.coverUrl}
+            width={24}
+            height={24}
+            className="w-6 h-6 rounded-full object-cover shrink-0"
+            alt=""
+          />
         ) : (
           <div className="w-6 h-6 rounded-full bg-accent-purple/20 flex items-center justify-center shrink-0">
             <span className="text-[9px] opacity-50">♫</span>

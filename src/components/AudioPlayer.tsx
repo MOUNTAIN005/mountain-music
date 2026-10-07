@@ -1,11 +1,13 @@
 'use client'
 
 import { useEffect, useRef, useCallback } from 'react'
+import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Play, Pause, SkipBack, SkipForward,
   Volume2, VolumeX, Heart, ListMusic, Repeat, Repeat1,
 } from 'lucide-react'
+import Image from 'next/image'
 import { useAudioPlayer } from '@/hooks/useAudioPlayer'
 import { formatDuration } from '@/lib/utils'
 
@@ -19,6 +21,7 @@ function parseLyrics(text: string | null | undefined): { time: number; text: str
 }
 
 export default function AudioPlayer() {
+  const pathname = usePathname()
   const audioRef = useRef<HTMLAudioElement>(null)
   const progressRef = useRef<HTMLDivElement>(null)
   const lastSongIdRef = useRef<number | null>(null)
@@ -125,7 +128,7 @@ export default function AudioPlayer() {
 
       {/* Player bar */}
       <AnimatePresence>
-        {currentSong && (
+        {pathname !== '/' && currentSong && (
           <motion.div
             initial={{ y: 100 }}
             animate={{ y: 0 }}
@@ -147,9 +150,15 @@ export default function AudioPlayer() {
 
             <div className="mx-auto max-w-[1770px] px-4 h-20 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className="w-12 h-12 rounded-lg bg-white/5 flex-shrink-0 overflow-hidden flex items-center justify-center">
+                <div className="relative w-12 h-12 rounded-lg bg-white/5 flex-shrink-0 overflow-hidden flex items-center justify-center">
                   {currentSong.coverUrl ? (
-                    <img src={currentSong.coverUrl} alt={currentSong.title} className="w-full h-full object-cover" />
+                    <Image
+                      src={currentSong.coverUrl}
+                      alt={currentSong.title}
+                      fill
+                      sizes="48px"
+                      className="object-cover"
+                    />
                   ) : (
                     <ListMusic size={20} className="text-gray-500" />
                   )}

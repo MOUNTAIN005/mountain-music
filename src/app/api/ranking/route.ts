@@ -1,14 +1,10 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { cacheHeaders, getRankingSongs } from '@/lib/public-data'
 
 export async function GET() {
   try {
-    const songs = await prisma.song.findMany({
-      where: { isPublished: true },
-      orderBy: { playCount: 'desc' },
-      take: 10,
-    })
-    return NextResponse.json({ success: true, data: songs })
+    const songs = await getRankingSongs()
+    return NextResponse.json({ success: true, data: songs }, { headers: cacheHeaders })
   } catch (error) {
     console.error('Get ranking error:', error)
     return NextResponse.json(

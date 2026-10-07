@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 import { Calendar, User, ArrowLeft, Loader2, Play, Pause, Music2 } from 'lucide-react'
 import { notFound, useParams, useRouter } from 'next/navigation'
 import { formatDate } from '@/lib/utils'
@@ -101,7 +102,14 @@ export default function StoryDetailPage() {
           className="relative aspect-video rounded-2xl overflow-hidden mb-6 shadow-lg shadow-accent-purple/[0.03]"
         >
           {story.imageUrl ? (
-            <img src={story.imageUrl} alt={story.title} className="w-full h-full object-cover" />
+            <Image
+              src={story.imageUrl}
+              alt={story.title}
+              fill
+              priority
+              sizes="(max-width: 768px) 100vw, 768px"
+              className="object-cover"
+            />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-accent-purple/15 via-accent-blue/10 to-transparent border border-white/5" />
           )}
@@ -122,9 +130,15 @@ export default function StoryDetailPage() {
               {/* Mini vinyl disc */}
               <button onClick={handlePlaySong} className="relative w-10 h-10 shrink-0 group">
                 <div className={`w-full h-full rounded-full bg-gradient-to-b from-gray-800 to-gray-950 flex items-center justify-center ${isThisPlaying ? "animate-[spin_3s_linear_infinite]" : ""}`}>
-                  <div className="w-[88%] h-[88%] rounded-full overflow-hidden">
+                  <div className="w-[88%] h-[88%] rounded-full overflow-hidden relative">
                     {relatedSong.coverUrl ? (
-                      <img src={relatedSong.coverUrl} className="w-full h-full object-cover rounded-full" alt="" />
+                      <Image
+                        src={relatedSong.coverUrl}
+                        alt=""
+                        fill
+                        sizes="40px"
+                        className="object-cover rounded-full"
+                      />
                     ) : (
                       <div className="w-full h-full rounded-full bg-gradient-to-br from-accent-purple/30 via-accent-blue/20 to-transparent flex items-center justify-center">
                         <Music2 size={14} className="text-white/30" />

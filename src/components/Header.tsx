@@ -20,6 +20,7 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const pathname = usePathname()
   const isAdmin = pathname?.startsWith('/admin')
+  const isLightHero = pathname === '/' && !scrolled && !mobileOpen
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50)
@@ -48,7 +49,7 @@ export default function Header() {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled
+        scrolled || mobileOpen
           ? 'bg-[#080808]/80 backdrop-blur-xl border-b border-white/5'
           : 'bg-transparent'
       }`}
@@ -58,7 +59,9 @@ export default function Header() {
           {/* Mobile menu button - before logo on mobile */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 text-gray-400 hover:text-white transition-colors shrink-0"
+            className={`md:hidden p-2 transition-colors shrink-0 ${
+              isLightHero ? 'text-black/60 hover:text-black' : 'text-gray-400 hover:text-white'
+            }`}
           >
             {mobileOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -66,10 +69,12 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-1 group flex-shrink-0">
             <motion.span
-              className="text-base sm:text-lg font-bold tracking-[0.15em] text-white"
+              className={`text-base sm:text-lg font-bold tracking-[0.15em] transition-colors ${
+                isLightHero ? 'text-black' : 'text-white'
+              }`}
               whileHover={{ scale: 1.02 }}
             >
-              MOUNTAIN <span className="text-white/40 font-normal tracking-normal">MUSIC</span>
+              MOUNTAIN <span className={`${isLightHero ? 'text-black/35' : 'text-white/40'} font-normal tracking-normal`}>MUSIC</span>
             </motion.span>
           </Link>
 
@@ -83,8 +88,8 @@ export default function Header() {
                   href={item.href}
                   className={`relative px-4 py-2 text-sm transition-colors duration-300 nav-link ${
                     isActive
-                      ? 'text-white'
-                      : 'text-gray-400 hover:text-white'
+                      ? isLightHero ? 'text-black' : 'text-white'
+                      : isLightHero ? 'text-black/45 hover:text-black' : 'text-gray-400 hover:text-white'
                   }`}
                 >
                   <span className="inline-flex">

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useCallback } from 'react'
+import { usePathname } from 'next/navigation'
 
 interface Particle {
   x: number
@@ -13,6 +14,7 @@ interface Particle {
 }
 
 export default function ParticleBackground() {
+  const pathname = usePathname()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const particlesRef = useRef<Particle[]>([])
   const mouseRef = useRef({ x: 0, y: 0 })
@@ -32,6 +34,8 @@ export default function ParticleBackground() {
   )
 
   useEffect(() => {
+    if (pathname === '/') return
+
     const canvas = canvasRef.current
     if (!canvas) return
 
@@ -126,7 +130,9 @@ export default function ParticleBackground() {
       window.removeEventListener('mousemove', handleMouse)
       cancelAnimationFrame(animationIdRef.current)
     }
-  }, [createParticle])
+  }, [createParticle, pathname])
+
+  if (pathname === '/') return null
 
   return (
     <canvas

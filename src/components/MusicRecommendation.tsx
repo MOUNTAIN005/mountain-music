@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Image from 'next/image'
 import { Play, Pause, ChevronLeft, Music, ChevronRight } from 'lucide-react'
 import { useAudioPlayer } from '@/hooks/useAudioPlayer'
 
@@ -153,7 +154,13 @@ export default function MusicRecommendation() {
                   <div className="absolute w-[84%] h-[84%] rounded-full border border-white/[0.012]" />
                   <div className="w-[90%] h-[90%] rounded-full overflow-hidden shadow-md relative">
                     {selectedSong.coverUrl ? (
-                      <img src={selectedSong.coverUrl} className="w-full h-full object-cover" alt="" />
+                      <Image
+                        src={selectedSong.coverUrl}
+                        alt=""
+                        fill
+                        sizes="288px"
+                        className="object-cover"
+                      />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-purple-600/30 via-fuchsia-600/20 to-transparent flex items-center justify-center">
                         <Music size={40} className="text-white/20" />
@@ -215,9 +222,15 @@ export default function MusicRecommendation() {
 </svg>
                         </div>
                       )}
-                      <div className="w-[85%] h-[85%] rounded-full overflow-hidden shadow-sm">
+                      <div className="w-[85%] h-[85%] rounded-full overflow-hidden shadow-sm relative">
                         {song.coverUrl ? (
-                          <img src={song.coverUrl} className="w-full h-full object-cover" alt="" />
+                          <Image
+                            src={song.coverUrl}
+                            alt=""
+                            fill
+                            sizes="96px"
+                            className="object-cover"
+                          />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-purple-600/20 to-transparent flex items-center justify-center">
                             <Music size={16} className="text-white/20" />
@@ -252,7 +265,13 @@ export default function MusicRecommendation() {
                     <div className="absolute w-[84%] h-[84%] rounded-full border border-white/[0.012]" />
                     <div className="w-[90%] h-[90%] rounded-full overflow-hidden shadow-md relative">
                             {song.coverUrl ? (
-                        <img src={song.coverUrl} className="w-full h-full object-cover" alt="" />
+                        <Image
+                          src={song.coverUrl}
+                          alt=""
+                          fill
+                          sizes="(max-width: 640px) 135px, (max-width: 768px) 198px, 252px"
+                          className="object-cover"
+                        />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-purple-600/30 via-fuchsia-600/20 to-transparent flex items-center justify-center">
                           <Music size={32} className="text-white/20" />

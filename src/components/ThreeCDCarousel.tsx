@@ -1,0 +1,649 @@
+'use client'
+
+import { useCallback, useEffect, useRef, useState } from 'react'
+import * as THREE from 'three'
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Pause, Play } from 'lucide-react'
+import { useAudioPlayer } from '@/hooks/useAudioPlayer'
+import type { Song } from '@/types'
+
+export interface ThreeCDCarouselItem {
+  id: string | number
+  title: string
+  meta: string
+  image?: string | null
+  description?: string | null
+  song?: Song
+}
+
+interface ThreeCDCarouselProps {
+  items?: ThreeCDCarouselItem[]
+  className?: string
+}
+
+const fallbackItems: ThreeCDCarouselItem[] = [
+  { id: 1, title: 'The Last Signal', meta: 'MOUNTAIN MUSIC', image: null, description: '让声音停留在山谷与城市之间。' },
+  { id: 2, title: 'Night Archive', meta: 'MOUNTAIN MUSIC', image: null, description: '夜晚之后，旋律仍在缓慢发光。' },
+  { id: 3, title: 'Somewhere in Time', meta: 'MOUNTAIN MUSIC', image: null, description: '一段关于远行与归途的声音。' },
+  { id: 4, title: 'After the Rain', meta: 'MOUNTAIN MUSIC', image: null, description: '把日常写成一段可以回放的旋律。' },
+  { id: 5, title: 'Final Scene', meta: 'MOUNTAIN MUSIC', image: null, description: '每一段回声，都值得被认真收藏。' },
+]
+
+const fallbackGradients = [
+  ['#75dcff', '#3979ff'],
+  ['#ffd075', '#ff8a3d'],
+  ['#ff7acb', '#8a66ff'],
+  ['#8eea94', '#29b9a4'],
+  ['#ff8a8a', '#f06336'],
+]
+
+const apiFileUrl = (url: string | null | undefined) => {
+  if (!url) return null
+  return url.startsWith('/uploads/') ? url.replace('/uploads/', '/api/uploads/') : url
+}
+
+const optimizedImageUrl = (url: string | null | undefined) => {
+  if (!url) return null
+  if (url.startsWith('/')) return url
+  return `/_next/image?url=${encodeURIComponent(url)}&w=1024&q=78`
+}
+
+function drawDiscInfo(
+  context: CanvasRenderingContext2D,
+  item: ThreeCDCarouselItem,
+) {
+  context.textAlign = 'center'
+  context.shadowColor = 'rgba(0,0,0,0.72)'
+  context.shadowBlur = 18
+  context.shadowOffsetY = 3
+  context.fillStyle = 'rgba(255,255,255,0.96)'
+  context.font = '700 66px sans-serif'
+  context.fillText(item.title.toUpperCase().slice(0, 18), 512, 742)
+  context.font = '500 38px sans-serif'
+  context.fillText(item.meta.toUpperCase().slice(0, 28), 512, 806)
+  context.shadowBlur = 0
+  context.shadowOffsetY = 0
+}
+
+function makeDiscTexture(
+  item: ThreeCDCarouselItem,
+  index: number,
+  onReady: () => void,
+) {
+  const canvas = document.createElement('canvas')
+  canvas.width = 1024
+  canvas.height = 1024
+  const context = canvas.getContext('2d')
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+
+  if (!context) return texture
+
+  const [from, to] = fallbackGradients[index % fallbackGradients.length]
+  const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height)
+  gradient.addColorStop(0, from)
+  gradient.addColorStop(1, to)
+  context.fillStyle = gradient
+  context.fillRect(0, 0, canvas.width, canvas.height)
+
+  if (!item.image) {
+    drawDiscInfo(context, item)
+    texture.needsUpdate = true
+    return texture
+  }
+
+  const image = new Image()
+  image.crossOrigin = 'anonymous'
+  image.onload = () => {
+    context.clearRect(0, 0, canvas.width, canvas.height)
+    context.fillStyle = '#eceff1'
+    context.fillRect(0, 0, canvas.width, canvas.height)
+    context.drawImage(image, 0, 0, canvas.width, canvas.height)
+    drawDiscInfo(context, item)
+    texture.needsUpdate = true
+    onReady()
+  }
+  image.onerror = () => {
+    drawDiscInfo(context, item)
+    texture.needsUpdate = true
+    onReady()
+  }
+  image.src = item.image
+  return texture
+}
+
+function parseLyrics(text: string | null | undefined) {
+  if (!text) return []
+
+  return text
+    .split('\n')
+    .filter((line) => line.trim())
+    .map((line) => {
+      const match = line.match(/\[(\d+):(\d+(?:\.\d+)?)\]\s*(.*)/)
+      if (match) {
+        return {
+          time: parseInt(match[1]) * 60 + parseFloat(match[2]),
+          text: match[3].trim(),
+        }
+      }
+      return { time: 0, text: line.trim() }
+    })
+    .filter((line) => line.text)
+}
+
+function cubicPoint(u: number, curveX: number, curveY: number) {
+  const oneMinusU = 1 - u
+  return {
+    x:
+      oneMinusU ** 3 * curveX
+      + 3 * oneMinusU ** 2 * u * -curveX * 0.34
+      + 3 * oneMinusU * u ** 2 * curveX * 0.34
+      + u ** 3 * -curveX,
+    y:
+      oneMinusU ** 3 * -curveY
+      + 3 * oneMinusU ** 2 * u * -curveY * 0.42
+      + 3 * oneMinusU * u ** 2 * curveY * 0.42
+      + u ** 3 * curveY,
+  }
+}
+
+export default function ThreeCDCarousel({
+  items,
+  className = '',
+}: ThreeCDCarouselProps) {
+  const [fetchedItems, setFetchedItems] = useState<ThreeCDCarouselItem[] | null>(null)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const scrollFrame = useRef<number | null>(null)
+  const targetIndexRef = useRef(0)
+  const smoothIndexRef = useRef(0)
+  const wakeRenderRef = useRef<() => void>(() => {})
+  const discButtonRefs = useRef<Array<HTMLButtonElement | null>>([])
+  const isPlayingRef = useRef(false)
+  const playingSongIdRef = useRef<string | number | null>(null)
+  const displayItems = items ?? fetchedItems ?? fallbackItems
+  const { play, currentSong, isPlaying, currentTime, pause, resume } = useAudioPlayer()
+
+  useEffect(() => {
+    if (items) return
+
+    const mapSongs = (songs: Partial<Song>[]) => songs.slice(0, 5).map((song, index) => {
+      const id = typeof song.id === 'number' ? song.id : -(400 + index)
+      const coverUrl = apiFileUrl(song.coverUrl)
+      const audioUrl = apiFileUrl(song.audioUrl) || ''
+
+      return {
+        id,
+        title: song.title || fallbackItems[index % fallbackItems.length].title,
+        meta: song.artist || 'MOUNTAIN MUSIC',
+        image: optimizedImageUrl(coverUrl),
+        description: song.description || fallbackItems[index % fallbackItems.length].description,
+        song: {
+          ...fallbackItems[0].song,
+          ...song,
+          id,
+          title: song.title || fallbackItems[index % fallbackItems.length].title,
+          artist: song.artist || 'MOUNTAIN MUSIC',
+          coverUrl,
+          audioUrl,
+          lyrics: song.lyrics || null,
+          description: song.description || null,
+        } as Song,
+      }
+    })
+
+    const loadItems = async () => {
+      try {
+        const recommendedResponse = await fetch('/api/recommended-songs')
+        const recommendedResult = await recommendedResponse.json()
+        if (recommendedResult.success && Array.isArray(recommendedResult.data) && recommendedResult.data.length > 0) {
+          setFetchedItems(mapSongs(recommendedResult.data))
+          return
+        }
+
+        const albumsResponse = await fetch('/api/albums')
+        const albumsResult = await albumsResponse.json()
+        if (!albumsResult.success || !Array.isArray(albumsResult.data)) return
+
+        const albumSongs = albumsResult.data
+          .flatMap((album: { coverUrl?: string | null; songs?: Partial<Song>[] }) =>
+            (album.songs || []).map((song) => ({
+              ...song,
+              coverUrl: song.coverUrl || album.coverUrl || null,
+            })),
+          )
+          .filter((song: Partial<Song>) => song.title)
+
+        if (albumSongs.length > 0) setFetchedItems(mapSongs(albumSongs))
+      } catch {}
+    }
+
+    loadItems()
+  }, [items])
+
+  const goTo = useCallback((index: number) => {
+    const node = scrollRef.current
+    if (!node) return
+    const nextIndex = Math.max(0, Math.min(displayItems.length - 1, index))
+    node.scrollTo({ top: nextIndex * node.clientHeight, behavior: 'smooth' })
+  }, [displayItems.length])
+
+  const handleScroll = () => {
+    if (scrollFrame.current !== null) return
+
+    scrollFrame.current = window.requestAnimationFrame(() => {
+      scrollFrame.current = null
+      const node = scrollRef.current
+      if (!node || displayItems.length < 2) return
+
+      const maxScroll = (displayItems.length - 1) * node.clientHeight
+      const progress = maxScroll > 0 ? node.scrollTop / maxScroll : 0
+      const nextIndex = Math.max(0, Math.min(displayItems.length - 1, progress * (displayItems.length - 1)))
+      targetIndexRef.current = nextIndex
+      setActiveIndex(Math.round(nextIndex))
+      wakeRenderRef.current()
+    })
+  }
+
+  useEffect(() => {
+    const node = scrollRef.current
+    if (!node || displayItems.length < 2) return
+
+    const centerIndex = Math.floor(displayItems.length / 2)
+    const frame = window.requestAnimationFrame(() => {
+      node.scrollTo({ top: centerIndex * node.clientHeight, behavior: 'instant' })
+      targetIndexRef.current = centerIndex
+      smoothIndexRef.current = centerIndex
+      setActiveIndex(centerIndex)
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [displayItems.length])
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container || displayItems.length === 0) return
+
+    const scene = new THREE.Scene()
+    const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100)
+    camera.position.set(0, 0, 11.5)
+    camera.lookAt(0, 0, 0)
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: 'high-performance',
+    })
+    renderer.setClearColor(0x000000, 0)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
+    renderer.outputColorSpace = THREE.SRGBColorSpace
+    renderer.toneMapping = THREE.ACESFilmicToneMapping
+    renderer.toneMappingExposure = 1.12
+    renderer.shadowMap.enabled = true
+    renderer.shadowMap.type = THREE.PCFShadowMap
+    container.appendChild(renderer.domElement)
+
+    const pmremGenerator = new THREE.PMREMGenerator(renderer)
+    const roomEnvironment = new RoomEnvironment()
+    scene.environment = pmremGenerator.fromScene(roomEnvironment, 0.04).texture
+    scene.environmentIntensity = 0.72
+    roomEnvironment.dispose()
+
+    scene.add(new THREE.AmbientLight(0xffffff, 1.2))
+    const keyLight = new THREE.DirectionalLight(0xffffff, 3.5)
+    keyLight.position.set(4, 5, 7)
+    keyLight.castShadow = true
+    keyLight.shadow.mapSize.set(1024, 1024)
+    keyLight.shadow.camera.left = -8
+    keyLight.shadow.camera.right = 8
+    keyLight.shadow.camera.top = 6
+    keyLight.shadow.camera.bottom = -6
+    keyLight.shadow.bias = -0.0003
+    scene.add(keyLight)
+
+    const rimLight = new THREE.PointLight(0xd8eaff, 12, 18, 2)
+    rimLight.position.set(-5, 3, 6)
+    scene.add(rimLight)
+
+    const shadowPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(18, 12),
+      new THREE.ShadowMaterial({ color: 0x111111, opacity: 0.1 }),
+    )
+    shadowPlane.position.z = -0.55
+    shadowPlane.receiveShadow = true
+    scene.add(shadowPlane)
+
+    const sceneRoot = new THREE.Group()
+    scene.add(sceneRoot)
+
+    const discGeometry = new THREE.RingGeometry(0.12, 1.3, 160, 1)
+    const rimGeometry = new THREE.RingGeometry(1.275, 1.315, 160, 1)
+    const hubGeometry = new THREE.RingGeometry(0.12, 0.34, 128, 1)
+    const ringMaterial = new THREE.MeshStandardMaterial({
+      color: 0xf7f8fa,
+      metalness: 0.04,
+      roughness: 0.34,
+      envMapIntensity: 0.65,
+      side: THREE.DoubleSide,
+    })
+    const rimMaterial = new THREE.MeshStandardMaterial({
+      color: 0xd7dbe0,
+      metalness: 0.96,
+      roughness: 0.12,
+      envMapIntensity: 0.9,
+      side: THREE.DoubleSide,
+    })
+    const hubMaterial = new THREE.MeshStandardMaterial({
+      color: 0xf2f4f6,
+      metalness: 0.7,
+      roughness: 0.2,
+      envMapIntensity: 0.78,
+      side: THREE.DoubleSide,
+    })
+    const groups: THREE.Group[] = []
+    const disposeItems: Array<() => void> = []
+
+    displayItems.forEach((item, index) => {
+      const group = new THREE.Group()
+      group.userData.index = index
+      group.userData.distance = 0
+      groups.push(group)
+
+      const texture = makeDiscTexture(item, index, () => wakeRenderRef.current())
+      texture.colorSpace = THREE.SRGBColorSpace
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy()
+      if (!item.image) texture.needsUpdate = true
+
+      const material = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        map: texture,
+        roughness: 0.52,
+        metalness: 0,
+        envMapIntensity: 0.45,
+        side: THREE.DoubleSide,
+      })
+
+      const baseDisc = new THREE.Mesh(discGeometry, ringMaterial)
+      baseDisc.position.z = 0
+      baseDisc.receiveShadow = true
+      group.add(baseDisc)
+
+      const disc = new THREE.Mesh(discGeometry, material)
+      disc.position.z = 0.012
+      disc.castShadow = true
+      disc.receiveShadow = true
+      group.userData.discMesh = disc
+      group.add(disc)
+
+      const rim = new THREE.Mesh(rimGeometry, rimMaterial)
+      rim.position.z = 0.018
+      rim.castShadow = true
+      group.add(rim)
+
+      const hub = new THREE.Mesh(hubGeometry, hubMaterial)
+      hub.position.z = 0.026
+      hub.castShadow = true
+      group.add(hub)
+
+      group.rotation.order = 'XYZ'
+      sceneRoot.add(group)
+      disposeItems.push(() => {
+        material.dispose()
+        texture.dispose()
+      })
+    })
+
+    let animationFrame = 0
+    let running = false
+    let lastFrameTime = performance.now()
+
+    const resize = () => {
+      const width = container.clientWidth
+      const height = container.clientHeight
+      if (!width || !height) return
+
+      renderer.setSize(width, height, false)
+      camera.aspect = width / height
+      camera.position.z = width < 640 ? 14.8 : 12.4
+      camera.updateProjectionMatrix()
+      sceneRoot.position.set(width < 640 ? 0.62 : 1.5, -0.04, 0)
+      wakeRenderRef.current()
+    }
+
+    const resizeObserver = new ResizeObserver(resize)
+    resizeObserver.observe(container)
+    resize()
+
+    const render = () => {
+      const now = performance.now()
+      const deltaSeconds = Math.min((now - lastFrameTime) / 1000, 0.05)
+      lastFrameTime = now
+      const difference = targetIndexRef.current - smoothIndexRef.current
+      smoothIndexRef.current += difference * 0.085
+      if (Math.abs(difference) < 0.0005) smoothIndexRef.current = targetIndexRef.current
+      const projectedPosition = new THREE.Vector3()
+      const playbackActive = isPlayingRef.current && playingSongIdRef.current !== null
+
+      groups.forEach((group, index) => {
+        const offset = index - smoothIndexRef.current
+        const distance = Math.abs(offset)
+        const u = (2 - offset) / 4
+        const point = cubicPoint(u, 4.25, 2.45)
+        const visible = distance < 3.45
+        const focus = Math.max(0, 1 - distance * 0.36)
+
+        group.visible = visible
+        group.position.set(point.x, point.y, -distance * 0.86)
+        group.scale.setScalar(0.72 + focus * 0.36)
+        group.rotation.x = -0.08 + Math.sin(u * Math.PI) * 0.07
+        group.rotation.y = (u - 0.5) * 0.52
+        group.rotation.z = -0.16 + (u - 0.5) * 0.42
+
+        if (playbackActive && displayItems[index]?.song?.id === playingSongIdRef.current) {
+          const discMesh = group.userData.discMesh as THREE.Mesh | undefined
+          if (discMesh) discMesh.rotation.z -= deltaSeconds * 1.35
+        }
+
+        const button = discButtonRefs.current[index]
+        if (button) {
+          group.getWorldPosition(projectedPosition)
+          projectedPosition.z += 0.08
+          projectedPosition.project(camera)
+          const screenX = (projectedPosition.x * 0.5 + 0.5) * container.clientWidth
+          const screenY = (-projectedPosition.y * 0.5 + 0.5) * container.clientHeight
+          const buttonScale = 0.82 + focus * 0.32
+
+          button.style.opacity = visible ? String(Math.max(0.28, 1 - Math.max(0, distance - 1.8) * 0.48)) : '0'
+          button.style.pointerEvents = visible ? 'auto' : 'none'
+          button.style.zIndex = String(40 - Math.round(distance * 5))
+          button.style.transform = `translate3d(${screenX}px, ${screenY}px, 0) translate(-50%, -50%) scale(${buttonScale})`
+        }
+      })
+
+      renderer.render(scene, camera)
+      if (Math.abs(targetIndexRef.current - smoothIndexRef.current) > 0.0005 || playbackActive) {
+        animationFrame = window.requestAnimationFrame(render)
+      } else {
+        running = false
+      }
+    }
+
+    const wakeRender = () => {
+      if (running) return
+      running = true
+      animationFrame = window.requestAnimationFrame(render)
+    }
+
+    wakeRenderRef.current = wakeRender
+    wakeRender()
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame)
+      wakeRenderRef.current = () => {}
+      resizeObserver.disconnect()
+      groups.forEach((group) => sceneRoot.remove(group))
+      scene.remove(sceneRoot)
+      disposeItems.forEach((dispose) => dispose())
+      discGeometry.dispose()
+      rimGeometry.dispose()
+      hubGeometry.dispose()
+      ringMaterial.dispose()
+      rimMaterial.dispose()
+      hubMaterial.dispose()
+      shadowPlane.geometry.dispose()
+      shadowPlane.material.dispose()
+      pmremGenerator.dispose()
+      renderer.dispose()
+      renderer.domElement.remove()
+    }
+  }, [displayItems])
+
+  useEffect(() => () => {
+    if (scrollFrame.current !== null) window.cancelAnimationFrame(scrollFrame.current)
+  }, [])
+
+  useEffect(() => {
+    isPlayingRef.current = isPlaying
+    playingSongIdRef.current = currentSong?.id ?? null
+    wakeRenderRef.current()
+  }, [currentSong?.id, isPlaying])
+
+  const activeItem = displayItems[activeIndex] || displayItems[0]
+  const playingItem = currentSong
+    ? displayItems.find((item) => item.song?.id === currentSong.id)
+    : undefined
+  const infoItem = playingItem || activeItem
+  const infoSong = infoItem.song
+  const isInfoPlaying = !!infoSong && currentSong?.id === infoSong.id && isPlaying
+  const lyricLines = parseLyrics(infoSong?.lyrics)
+  const lyricIndex = isInfoPlaying
+    ? lyricLines.findLastIndex((line) => currentTime >= line.time)
+    : -1
+  const currentLyric = lyricIndex >= 0 ? lyricLines[lyricIndex]?.text : ''
+
+  const toggleSong = (item: ThreeCDCarouselItem, index?: number) => {
+    const song = item.song
+    if (!song?.audioUrl) return
+
+    if (typeof index === 'number') goTo(index)
+
+    if (currentSong?.id === song.id && isPlaying) {
+      pause()
+      return
+    }
+    if (currentSong?.id === song.id && !isPlaying) {
+      resume()
+      return
+    }
+    play(song)
+  }
+
+  return (
+    <section className={`relative h-screen overflow-hidden bg-[#f3f3f0] text-[#0a0a0a] ${className}`}>
+      <div
+        ref={scrollRef}
+        data-lenis-prevent
+        onScroll={handleScroll}
+        className="no-scrollbar relative h-screen snap-y snap-mandatory overflow-y-scroll"
+      >
+        <div className="sticky top-0 h-screen snap-start snap-always overflow-hidden">
+          <div ref={containerRef} className="absolute inset-0 z-10" />
+
+          <div className="pointer-events-none absolute left-6 top-24 z-30 w-[80vw] max-w-[360px] translate-x-[20%] sm:left-10 sm:top-28 lg:top-32">
+            <p className="mb-2 text-[10px] uppercase tracking-[0.24em] text-black/45">
+              {isInfoPlaying ? 'Now Playing' : 'Now Selected'}
+            </p>
+            <h1 className="w-full break-words text-3xl font-semibold leading-[0.95] tracking-[-0.04em] sm:text-5xl">
+              {infoItem.title}
+            </h1>
+            <p className="mt-3 w-full break-words text-xs uppercase tracking-[0.18em] text-black/45">{infoItem.meta}</p>
+            {infoItem.description && (
+              <p className="mt-5 w-full break-words text-xs leading-relaxed text-black/50">
+                {infoItem.description}
+              </p>
+            )}
+            <div className="mt-8 space-y-2 text-[10px] uppercase tracking-[0.16em] text-black/40">
+              <div className="flex justify-between gap-10 border-t border-black/15 pt-2">
+                <span>Artist</span>
+                <span className="min-w-0 truncate text-right">{infoItem.meta}</span>
+              </div>
+              <div className="flex justify-between gap-10 border-t border-black/15 pt-2">
+                <span>Format</span>
+                <span>Compact Disc</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => toggleSong(infoItem, displayItems.indexOf(infoItem))}
+              disabled={!infoSong?.audioUrl}
+              className="pointer-events-auto mt-7 inline-flex h-12 items-center gap-3 rounded-full bg-black px-5 text-sm font-medium text-white transition hover:scale-[1.03] hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              {isInfoPlaying ? <Pause size={17} fill="currentColor" /> : <Play size={17} fill="currentColor" />}
+              {isInfoPlaying ? '暂停播放' : '播放歌曲'}
+            </button>
+          </div>
+
+          <div className="pointer-events-none absolute left-6 top-[430px] z-30 w-[80vw] max-w-[320px] translate-x-[20%] overflow-hidden border-l-2 border-black/10 pl-4 sm:left-10 sm:top-[458px] lg:top-[474px]">
+            <p className="mb-2 text-[9px] uppercase tracking-[0.22em] text-black/35">Lyrics</p>
+            <div className="h-12 w-full overflow-hidden">
+              <AnimatePresence mode="wait">
+                {currentLyric ? (
+                  <motion.p
+                    key={`${infoSong?.id}-${lyricIndex}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.28 }}
+                    className="w-full break-words text-sm leading-6 text-black/65"
+                  >
+                    {currentLyric}
+                  </motion.p>
+                ) : (
+                  <p key="lyrics-waiting" className="text-xs leading-6 text-black/30">
+                    播放后逐句显示歌词
+                  </p>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+
+          <div className="pointer-events-none absolute inset-0 z-20">
+            {displayItems.map((item, index) => item.song?.audioUrl ? (
+              <button
+                key={`play-${item.id}`}
+                ref={(element) => {
+                  discButtonRefs.current[index] = element
+                }}
+                type="button"
+                aria-label={`${currentSong?.id === item.song.id && isPlaying ? '暂停' : '播放'} ${item.title}`}
+                onClick={() => toggleSong(item, index)}
+                className="absolute left-0 top-0 flex h-11 w-11 items-center justify-center rounded-full border border-white/65 bg-black/80 text-white opacity-0 shadow-[0_8px_24px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-[background-color,opacity] hover:bg-[#ff6b35]"
+                style={{ willChange: 'transform, opacity' }}
+              >
+                {currentSong?.id === item.song.id && isPlaying
+                  ? <Pause size={15} fill="currentColor" />
+                  : <Play size={15} fill="currentColor" className="translate-x-[1px]" />}
+              </button>
+            ) : null)}
+          </div>
+
+          <div className="pointer-events-none absolute bottom-9 left-1/2 z-30 hidden -translate-x-1/2 text-center md:block">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-black/40">
+              {String(activeIndex + 1).padStart(2, '0')} / {String(displayItems.length).padStart(2, '0')}
+            </p>
+          </div>
+        </div>
+
+        {displayItems.slice(1).map((item) => (
+          <div
+            key={`scroll-stop-${item.id}`}
+            className="pointer-events-none h-screen snap-start snap-always"
+            aria-hidden="true"
+          />
+        ))}
+      </div>
+    </section>
+  )
+}

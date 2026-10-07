@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { unlinkSync } from 'fs'
 import { join } from 'path'
@@ -19,6 +20,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
       try { unlinkSync(fileUrlToPath(social.qrCodeUrl)) } catch {}
     }
     await prisma.socialLink.delete({ where: { id: parseInt(id) } })
+    revalidateTag('socials')
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Delete social error:', error)

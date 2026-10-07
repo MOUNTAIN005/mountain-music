@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 import { Play, ChevronLeft, Disc3, Music, DiscAlbum } from 'lucide-react'
 import { useAudioPlayer } from '@/hooks/useAudioPlayer'
 
@@ -104,7 +105,13 @@ export default function AlbumSection() {
                    {album.coverUrl && (
                      <>
                        <div className="absolute inset-0">
-                         <img src={album.coverUrl} className="w-full h-full object-cover opacity-30" alt="" />
+                         <Image
+                           src={album.coverUrl}
+                           alt=""
+                           fill
+                           sizes="(max-width: 768px) 100vw, 50vw"
+                           className="object-cover opacity-30"
+                         />
                        </div>
                        <div className="absolute inset-0 bg-black/50" />
                      </>
@@ -165,9 +172,15 @@ export default function AlbumSection() {
                             style={{ animation: currentSong?.id === song.id && isPlaying ? 'spin 4s linear infinite' : 'none' }}>
                             <div className="absolute w-[90%] h-[90%] rounded-full border border-white/[0.012]" />
                             <div className="absolute w-[84%] h-[84%] rounded-full border border-white/[0.012]" />
-                            <div className="w-[90%] h-[90%] rounded-full overflow-hidden shadow-md">
+                            <div className="w-[90%] h-[90%] rounded-full overflow-hidden shadow-md relative">
                               {(song.coverUrl || album.coverUrl) ? (
-                                <img src={song.coverUrl || album.coverUrl} className="w-full h-full object-cover" alt={song.title} />
+                                <Image
+                                  src={song.coverUrl || album.coverUrl}
+                                  alt={song.title}
+                                  fill
+                                  sizes="126px"
+                                  className="object-cover"
+                                />
                               ) : (
                                 <div className="w-full h-full rounded-full bg-gradient-to-br from-accent-purple/20 via-accent-blue/20 to-transparent flex items-center justify-center">
                                   <Music size={24} className="text-white/20" />

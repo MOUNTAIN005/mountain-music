@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { Play, Music } from 'lucide-react'
+import Image from 'next/image'
 import { useAudioPlayer } from '@/hooks/useAudioPlayer'
 import { formatDuration } from '@/lib/utils'
 import type { Song } from '@/types'
@@ -33,10 +34,12 @@ export default function SongCard({ song, index }: SongCardProps) {
       {/* Cover */}
       <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-white/5">
         {song.coverUrl ? (
-          <img
+          <Image
             src={song.coverUrl}
             alt={song.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            fill
+            sizes="56px"
+            className="object-cover transition-transform duration-500 group-hover:scale-110"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">

@@ -1,4 +1,6 @@
-import { NextResponse } from 'next/server'; import { prisma } from '@/lib/prisma'
+import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
+import { prisma } from '@/lib/prisma'
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const story = await prisma.story.findUnique({
@@ -11,9 +13,11 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params; const body = await req.json()
   const story = await prisma.story.update({ where: { id: parseInt(id) }, data: body })
+  revalidateTag('stories')
   return NextResponse.json({ success: true, data: story })
 }
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params; await prisma.story.delete({ where: { id: parseInt(id) } })
+  revalidateTag('stories')
   return NextResponse.json({ success: true })
 }

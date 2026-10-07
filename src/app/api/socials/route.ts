@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { prisma } from '@/lib/prisma'
+import { cacheHeaders, getSocialLinks } from '@/lib/public-data'
 
 export async function GET() {
   try {
-    const socials = await prisma.socialLink.findMany({
-      orderBy: { sortOrder: 'asc' },
-    })
-    return NextResponse.json({ success: true, data: socials })
+    const socials = await getSocialLinks()
+    return NextResponse.json({ success: true, data: socials }, { headers: cacheHeaders })
   } catch (error) {
     console.error('Get socials error:', error)
     return NextResponse.json(
@@ -44,6 +44,7 @@ export async function PUT(request: Request) {
       })
     }
 
+    revalidateTag('socials')
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Update socials error:', error)

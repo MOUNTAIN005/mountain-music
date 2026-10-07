@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Image from 'next/image'
 import { Play, Pause, ChevronDown, Music2 } from 'lucide-react'
 import { useAudioPlayer } from '@/hooks/useAudioPlayer'
 import type { Song } from '@/types'
@@ -113,11 +114,14 @@ export default function HeroSection() {
     <section className="relative w-full h-[66vh] sm:aspect-video sm:max-h-screen overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-110 will-change-transform"
-          style={{
-            backgroundImage: `url(${bgImage})`,
-            transform: `translateY(${scrollY * 0.15}px)`,
-          }}
+        <Image
+          src={bgImage}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover scale-110 will-change-transform"
+          style={{ transform: `translateY(${scrollY * 0.15}px)` }}
         />
         <div className="absolute inset-0 bg-black/40 backdrop-blur-[8px]" />
         <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-[#080808] via-[#080808]/60 to-transparent" />
@@ -143,9 +147,16 @@ export default function HeroSection() {
                 <div className="absolute inset-[1%] rounded-full border border-white/[0.015]" />
                 <div className="absolute inset-[2.5%] rounded-full border border-white/[0.015]" />
                 <div className="absolute inset-[4%] rounded-full border border-white/[0.015]" />
-                <div className="absolute inset-[5%] rounded-full overflow-hidden shadow-lg">
+                <div className="absolute inset-[5%] rounded-full overflow-hidden shadow-lg relative">
                   {song.coverUrl ? (
-                    <img src={song.coverUrl} className="w-full h-full object-cover" alt={song.title} />
+                    <Image
+                      src={song.coverUrl}
+                      alt={song.title}
+                      fill
+                      priority
+                      sizes="(max-width: 640px) 160px, (max-width: 1024px) 224px, 288px"
+                      className="object-cover"
+                    />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-accent-purple/30 via-accent-blue/30 to-transparent flex items-center justify-center">
                       <span className="text-2xl opacity-30">♫</span>

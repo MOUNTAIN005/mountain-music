@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { prisma } from '@/lib/prisma'
+import { cacheHeaders, getAlbums } from '@/lib/public-data'
 
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url); const showAll = url.searchParams.get("all") === "true";
-    const albums = await prisma.album.findMany({
-      where: showAll ? {} : { isPublished: true },
-      include: { songs: true },
-      orderBy: { createdAt: 'desc' },
-    })
-    return NextResponse.json({ success: true, data: albums })
+    const albums = await getAlbums(showAll)
+    return NextResponse.json({ success: true, data: albums }, { headers: cacheHeaders })
   } catch (error) {
     console.error('Get albums error:', error)
     return NextResponse.json(
@@ -23,6 +21,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     const album = await prisma.album.create({ data: body })
+    revalidateTag('albums')
     return NextResponse.json({ success: true, data: album }, { status: 201 })
   } catch (error) {
     console.error('Create album error:', error)

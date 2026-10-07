@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 import { Trophy, Play, Music } from 'lucide-react'
 import { useAudioPlayer } from '@/hooks/useAudioPlayer'
 
@@ -84,9 +85,15 @@ export default function RankingPage() {
                   </div>
 
                   {/* Cover */}
-                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-white/5 flex-shrink-0">
+                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-white/5 flex-shrink-0 relative">
                     {song.coverUrl ? (
-                      <img src={apiFileUrl(song.coverUrl)} alt={song.title} className="w-full h-full object-cover" />
+                      <Image
+                        src={apiFileUrl(song.coverUrl)}
+                        alt={song.title}
+                        fill
+                        sizes="48px"
+                        className="object-cover"
+                      />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <Music size={20} className="text-gray-600" />

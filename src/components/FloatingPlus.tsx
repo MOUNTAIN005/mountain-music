@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 
 const plusIcon = (
   <svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -14,9 +15,12 @@ interface Plus {
 }
 
 export default function FloatingPlus() {
+  const pathname = usePathname()
   const [pluses, setPluses] = useState<Plus[]>([])
 
   useEffect(() => {
+    if (pathname === '/') return
+
     const items: Plus[] = Array.from({ length: 8 }, (_, i) => ({
       id: i,
       x: 5 + Math.random() * 90,
@@ -27,7 +31,9 @@ export default function FloatingPlus() {
       opacity: 0.06 + Math.random() * 0.08,
     }))
     setPluses(items)
-  }, [])
+  }, [pathname])
+
+  if (pathname === '/') return null
 
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">

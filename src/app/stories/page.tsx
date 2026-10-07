@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { BookOpen, Calendar, User, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { formatDate } from '@/lib/utils'
 import type { Story } from '@/types'
 
@@ -66,11 +67,13 @@ export default function StoriesPage() {
                 <div className="group p-8 rounded-2xl glass glass-hover h-full">
                   {/* Image placeholder */}
                   {story.imageUrl ? (
-                    <div className="aspect-video rounded-xl overflow-hidden mb-6 bg-white/5">
-                      <img
+                    <div className="relative aspect-video rounded-xl overflow-hidden mb-6 bg-white/5">
+                      <Image
                         src={story.imageUrl}
                         alt={story.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     </div>
                   ) : (

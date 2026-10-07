@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Music } from 'lucide-react'
+import Image from 'next/image'
 
 // Platform SVG icons (24x24)
 const platformIcons = {
@@ -88,6 +89,8 @@ export default function Footer() {
 
   const currentPlatform = activePopup || hoveredPlatform
 
+  if (pathname === '/') return null
+
   return (
     <footer className="relative z-10 border-t border-white/5 bg-[#080808]">
       <div className="mx-auto max-w-[1770px] px-4 py-16 sm:px-6 lg:px-8">
@@ -145,11 +148,13 @@ export default function Footer() {
                           className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-50"
                         >
                           <div className="p-3 rounded-xl glass border border-white/10 shadow-xl shadow-black/30 text-center min-w-[160px]">
-                            <div className="w-32 h-32 mx-auto rounded-lg overflow-hidden bg-white/5 flex items-center justify-center">
-                              <img
+                            <div className="relative w-32 h-32 mx-auto rounded-lg overflow-hidden bg-white/5 flex items-center justify-center">
+                              <Image
                                 src={social.qrCodeUrl}
                                 alt={`${social.name}二维码`}
-                                className="w-full h-full object-contain"
+                                fill
+                                sizes="128px"
+                                className="object-contain"
                               />
                             </div>
                             <p className="text-xs text-gray-300 mt-2 font-medium">{social.accountName || social.name}</p>

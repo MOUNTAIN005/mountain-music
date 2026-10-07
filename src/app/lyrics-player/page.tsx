@@ -232,7 +232,7 @@ export default function LyricsPlayerPage() {
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', background: '#0a0a0f', position: 'relative' }}>
       <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />
 
-      <audio ref={audioRef} src="/songs/my-time.wav" preload="auto"
+      <audio ref={audioRef} src="/songs/my-time.mp3" preload="auto"
         onTimeUpdate={() => {
           const t = audioRef.current!.currentTime
           setTime(t)

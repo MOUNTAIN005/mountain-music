@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { Music, Play } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Album } from '@/types'
 
 interface AlbumCardProps {
@@ -20,10 +21,12 @@ export default function AlbumCard({ album, index = 0 }: AlbumCardProps) {
       <Link href={`/albums/${album.id}`} className="group block">
         <div className="relative aspect-square rounded-2xl overflow-hidden bg-white/5 mb-4">
           {album.coverUrl ? (
-            <img
+            <Image
               src={album.coverUrl}
               alt={album.title}
-              className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+              className="object-cover transition-all duration-700 group-hover:scale-110"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
