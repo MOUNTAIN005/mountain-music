@@ -173,6 +173,28 @@ function cubicPoint(u: number, curveX: number, curveY: number) {
   }
 }
 
+function getInfoPanelCoverage(
+  centerX: number,
+  centerY: number,
+  radius: number,
+  panelRect: DOMRect | null,
+) {
+  if (!panelRect || radius <= 0) return 0
+
+  const overlapWidth = Math.max(
+    0,
+    Math.min(centerX + radius, panelRect.right) - Math.max(centerX - radius, panelRect.left),
+  )
+  const overlapHeight = Math.max(
+    0,
+    Math.min(centerY + radius, panelRect.bottom) - Math.max(centerY - radius, panelRect.top),
+  )
+  const overlapArea = overlapWidth * overlapHeight
+  const discArea = Math.PI * radius * radius
+
+  return Math.min(1, overlapArea / (discArea * 0.55))
+}
+
 export default function ThreeCDCarousel({
   items,
   className = '',
@@ -188,6 +210,7 @@ export default function ThreeCDCarousel({
   const discButtonRefs = useRef<Array<HTMLButtonElement | null>>([])
   const isPlayingRef = useRef(false)
   const playingSongIdRef = useRef<string | number | null>(null)
+  const infoPanelRef = useRef<HTMLDivElement>(null)
   const displayItems = items ?? fetchedItems ?? fallbackItems
   const { play, currentSong, isPlaying, currentTime, pause, resume } = useAudioPlayer()
 
@@ -589,6 +612,11 @@ export default function ThreeCDCarousel({
     let animationFrame = 0
     let running = false
     let lastFrameTime = performance.now()
+    let infoPanelRect: DOMRect | null = null
+
+    const updateInfoPanelRect = () => {
+      infoPanelRect = infoPanelRef.current?.getBoundingClientRect() ?? null
+    }
 
     const resize = () => {
       const width = container.clientWidth
@@ -600,11 +628,14 @@ export default function ThreeCDCarousel({
       camera.position.z = width < 640 ? 14.8 : 12.4
       camera.updateProjectionMatrix()
       sceneRoot.position.set(width < 640 ? 0.62 : 1.5, -0.04, 0)
+      updateInfoPanelRect()
       wakeRenderRef.current()
     }
 
     const resizeObserver = new ResizeObserver(resize)
+    const infoPanelResizeObserver = new ResizeObserver(updateInfoPanelRect)
     resizeObserver.observe(container)
+    if (infoPanelRef.current) infoPanelResizeObserver.observe(infoPanelRef.current)
     resize()
 
     const render = () => {
@@ -616,6 +647,17 @@ export default function ThreeCDCarousel({
       if (Math.abs(difference) < 0.0005) smoothIndexRef.current = targetIndexRef.current
       const projectedPosition = new THREE.Vector3()
       const playbackActive = isPlayingRef.current && playingSongIdRef.current !== null
+      const projectedDiscs: Array<{
+        index: number
+        distance: number
+        depth: number
+        opacity: number
+        visible: boolean
+        coverage: number
+        screenX: number
+        screenY: number
+        radius: number
+      }> = []
 
       groups.forEach((group, index) => {
         const offset = index - smoothIndexRef.current
@@ -624,8 +666,6 @@ export default function ThreeCDCarousel({
         const point = cubicPoint(u, 3.2, 1.85)
         const revealProgress = Math.max(0, Math.min(1, (2 - offset) / 0.72))
         const edgeFade = distance > 2.7 ? Math.max(0, 1 - (distance - 2.7) * 0.72) : 1
-        const opacity = revealProgress * edgeFade
-        const visible = opacity > 0.01
         const focus = Math.max(0, 1 - distance * 0.36)
 
         if (index === 0) {
@@ -640,12 +680,27 @@ export default function ThreeCDCarousel({
           }
         }
 
-        group.visible = visible
         group.position.set(point.x, point.y, -distance * 0.86)
         group.scale.setScalar(0.72 + focus * 0.36)
         group.rotation.x = -0.08 + Math.sin(u * Math.PI) * 0.07
         group.rotation.y = (u - 0.5) * 0.52
         group.rotation.z = -0.16 + (u - 0.5) * 0.42
+        group.updateWorldMatrix(true, false)
+
+        group.getWorldPosition(projectedPosition)
+        const worldZ = projectedPosition.z
+        projectedPosition.z += 0.08
+        projectedPosition.project(camera)
+        const screenX = (projectedPosition.x * 0.5 + 0.5) * container.clientWidth
+        const screenY = (-projectedPosition.y * 0.5 + 0.5) * container.clientHeight
+        const cameraDistance = Math.max(1, camera.position.z - worldZ)
+        const radius = group.scale.x * 1.3
+          * (container.clientHeight / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * cameraDistance))
+        const coverage = getInfoPanelCoverage(screenX, screenY, radius, infoPanelRect)
+        const opacity = revealProgress * edgeFade * (1 - coverage * 0.7)
+        const visible = opacity > 0.01
+
+        group.visible = visible
         const materialList = group.userData.materials as THREE.Material[]
         materialList.forEach((entry) => {
           entry.transparent = true
@@ -657,20 +712,39 @@ export default function ThreeCDCarousel({
           if (discMesh) discMesh.rotation.z -= deltaSeconds * 1.35
         }
 
-        const button = discButtonRefs.current[index]
-        if (button) {
-          group.getWorldPosition(projectedPosition)
-          projectedPosition.z += 0.08
-          projectedPosition.project(camera)
-          const screenX = (projectedPosition.x * 0.5 + 0.5) * container.clientWidth
-          const screenY = (-projectedPosition.y * 0.5 + 0.5) * container.clientHeight
-          const buttonScale = 0.82 + focus * 0.32
+        projectedDiscs.push({
+          index,
+          distance,
+          depth: group.position.z,
+          opacity,
+          visible,
+          coverage,
+          screenX,
+          screenY,
+          radius,
+        })
+      })
 
-          button.style.opacity = visible ? String(opacity * Math.max(0.28, 1 - Math.max(0, distance - 1.8) * 0.48)) : '0'
-          button.style.pointerEvents = visible && opacity > 0.2 ? 'auto' : 'none'
-          button.style.zIndex = String(40 - Math.round(distance * 5))
-          button.style.transform = `translate3d(${screenX}px, ${screenY}px, 0) translate(-50%, -50%) scale(${buttonScale})`
-        }
+      projectedDiscs.forEach((disc) => {
+        const button = discButtonRefs.current[disc.index]
+        if (!button) return
+
+        const buttonScale = 0.82 + Math.max(0, 1 - disc.distance * 0.36) * 0.32
+        const buttonRadius = 22 * buttonScale
+        const occluded = projectedDiscs.some((other) => (
+          other.index !== disc.index
+          && other.visible
+          && other.depth > disc.depth + 0.02
+          && Math.hypot(other.screenX - disc.screenX, other.screenY - disc.screenY)
+            < other.radius + buttonRadius * 0.18
+        ))
+        const buttonOpacity = disc.opacity * Math.max(0.28, 1 - Math.max(0, disc.distance - 1.8) * 0.48)
+        const showButton = disc.visible && !occluded && disc.coverage < 0.62
+
+        button.style.opacity = showButton ? String(buttonOpacity) : '0'
+        button.style.pointerEvents = showButton && buttonOpacity > 0.2 && disc.coverage < 0.2 ? 'auto' : 'none'
+        button.style.zIndex = String(80 + Math.round(disc.depth * 20))
+        button.style.transform = `translate3d(${disc.screenX}px, ${disc.screenY}px, 0) translate(-50%, -50%) scale(${buttonScale})`
       })
 
       renderer.render(scene, camera)
@@ -694,6 +768,7 @@ export default function ThreeCDCarousel({
       window.cancelAnimationFrame(animationFrame)
       wakeRenderRef.current = () => {}
       resizeObserver.disconnect()
+      infoPanelResizeObserver.disconnect()
       groups.forEach((group) => sceneRoot.remove(group))
       sceneRoot.remove(caseGroup)
       scene.remove(sceneRoot)
@@ -779,25 +854,28 @@ export default function ThreeCDCarousel({
         <div className="sticky top-0 h-screen snap-start snap-always overflow-hidden">
           <div ref={containerRef} className="absolute inset-0 z-10" />
 
-          <div className="pointer-events-none absolute left-6 top-24 z-30 w-[80vw] max-w-[360px] translate-x-[20%] sm:left-10 sm:top-28 lg:top-32">
-            <p className="mb-2 text-[10px] uppercase tracking-[0.24em] text-black/45">
+          <div
+            ref={infoPanelRef}
+            className="pointer-events-none absolute left-5 top-[76px] z-30 w-[66vw] max-w-[260px] translate-x-0 sm:left-10 sm:top-28 sm:w-[80vw] sm:max-w-[360px] sm:translate-x-[20%] lg:top-32"
+          >
+            <p className="mb-1.5 text-[9px] uppercase tracking-[0.2em] text-black/45 sm:mb-2 sm:text-[10px] sm:tracking-[0.24em]">
               {isInfoPlaying ? 'Now Playing' : 'Now Selected'}
             </p>
-            <h1 className="w-full break-words text-3xl font-semibold leading-[0.95] tracking-[-0.04em] sm:text-5xl">
+            <h1 className="w-full break-words text-[26px] font-semibold leading-[0.95] tracking-[-0.04em] sm:text-5xl">
               {infoItem.title}
             </h1>
-            <p className="mt-3 w-full break-words text-xs uppercase tracking-[0.18em] text-black/45">{infoItem.meta}</p>
+            <p className="mt-2 w-full break-words text-[10px] uppercase tracking-[0.16em] text-black/45 sm:mt-3 sm:text-xs sm:tracking-[0.18em]">{infoItem.meta}</p>
             {infoItem.description && (
-              <p className="mt-5 w-full break-words text-xs leading-relaxed text-black/50">
+              <p className="mt-3 w-full break-words text-[11px] leading-relaxed text-black/50 sm:mt-5 sm:text-xs">
                 {infoItem.description}
               </p>
             )}
-            <div className="mt-8 space-y-2 text-[10px] uppercase tracking-[0.16em] text-black/40">
-              <div className="flex justify-between gap-10 border-t border-black/15 pt-2">
+            <div className="mt-5 space-y-1.5 text-[9px] uppercase tracking-[0.14em] text-black/40 sm:mt-8 sm:space-y-2 sm:text-[10px] sm:tracking-[0.16em]">
+              <div className="flex justify-between gap-4 border-t border-black/15 pt-2 sm:gap-10">
                 <span>Artist</span>
                 <span className="min-w-0 truncate text-right">{infoItem.meta}</span>
               </div>
-              <div className="flex justify-between gap-10 border-t border-black/15 pt-2">
+              <div className="flex justify-between gap-4 border-t border-black/15 pt-2 sm:gap-10">
                 <span>Format</span>
                 <span>Compact Disc</span>
               </div>
@@ -806,14 +884,14 @@ export default function ThreeCDCarousel({
               type="button"
               onClick={() => toggleSong(infoItem, displayItems.indexOf(infoItem))}
               disabled={!infoSong?.audioUrl}
-              className="pointer-events-auto mt-7 inline-flex h-12 items-center gap-3 rounded-full bg-black px-5 text-sm font-medium text-white transition hover:scale-[1.03] hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-30"
+              className="pointer-events-auto mt-4 inline-flex h-10 items-center gap-2 rounded-full bg-black px-4 text-xs font-medium text-white transition hover:scale-[1.03] hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-30 sm:mt-7 sm:h-12 sm:gap-3 sm:px-5 sm:text-sm"
             >
-              {isInfoPlaying ? <Pause size={17} fill="currentColor" /> : <Play size={17} fill="currentColor" />}
+              {isInfoPlaying ? <Pause size={15} fill="currentColor" /> : <Play size={15} fill="currentColor" />}
               {isInfoPlaying ? '暂停播放' : '播放歌曲'}
             </button>
           </div>
 
-          <div className="pointer-events-none absolute left-6 top-[430px] z-30 w-[80vw] max-w-[320px] translate-x-[20%] overflow-hidden border-l-2 border-black/10 pl-4 sm:left-10 sm:top-[458px] lg:top-[474px]">
+          <div className="pointer-events-none absolute left-5 top-[330px] z-30 w-[66vw] max-w-[260px] translate-x-0 overflow-hidden border-l-2 border-black/10 pl-3 sm:left-10 sm:top-[458px] sm:w-[80vw] sm:max-w-[320px] sm:translate-x-[20%] sm:pl-4 lg:top-[474px]">
             <p className="mb-2 text-[9px] uppercase tracking-[0.22em] text-black/35">Lyrics</p>
             <div className="h-12 w-full overflow-hidden">
               <AnimatePresence mode="wait">
@@ -847,7 +925,7 @@ export default function ThreeCDCarousel({
                 type="button"
                 aria-label={`${currentSong?.id === item.song.id && isPlaying ? '暂停' : '播放'} ${item.title}`}
                 onClick={() => toggleSong(item, index)}
-                className="absolute left-0 top-0 flex h-11 w-11 items-center justify-center rounded-full border border-white/65 bg-black/80 text-white opacity-0 shadow-[0_8px_24px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-[background-color,opacity] hover:bg-[#ff6b35]"
+                className="absolute left-0 top-0 flex h-11 w-11 items-center justify-center rounded-full border border-white/65 bg-black/80 text-white opacity-0 shadow-[0_8px_24px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-[background-color,box-shadow] hover:bg-[#ff6b35]"
                 style={{ willChange: 'transform, opacity' }}
               >
                 {currentSong?.id === item.song.id && isPlaying
