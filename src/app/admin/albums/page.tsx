@@ -155,8 +155,8 @@ export default function AdminAlbumsPage() {
               body: JSON.stringify({ title: s.title, artist: s.artist || '山影知道', audioUrl: s.audioUrl, description: s.description, lyrics: s.lyrics, genre: '原创', albumId: editingAlbumId, duration: s.duration || 0, isRecommended: s.isRecommended || false }),
             })
             const sd = await sr.json(); if (!sd.success) throw new Error('更新歌曲失败: ' + (sd.error || ''))
-          } else if (s.audioUrl) {
-            const sr = await fetch('/api/songs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: s.title, artist: s.artist || '山影知道', audioUrl: s.audioUrl, description: s.description, lyrics: s.lyrics, genre: '原创', albumId: editingAlbumId, isPublished: true, duration: s.duration || 0, isRecommended: s.isRecommended || false }) })
+          } else {
+            const sr = await fetch('/api/songs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: s.title, artist: s.artist || '山影知道', audioUrl: s.audioUrl || '', description: s.description, lyrics: s.lyrics, genre: '原创', albumId: editingAlbumId, isPublished: true, duration: s.duration || 0, isRecommended: s.isRecommended || false }) })
             const sd = await sr.json(); if (!sd.success) throw new Error('保存歌曲失败: ' + (sd.error || ''))
           }
         }
