@@ -46,7 +46,7 @@ const apiFileUrl = (url: string | null | undefined) => {
 const optimizedImageUrl = (url: string | null | undefined) => {
   if (!url) return null
   if (url.startsWith('/')) return url
-  return `/_next/image?url=${encodeURIComponent(url)}&w=1024&q=78`
+  return `/_next/image?url=${encodeURIComponent(url)}&w=1080&q=78`
 }
 
 function drawDiscInfo(
@@ -66,11 +66,7 @@ function drawDiscInfo(
   context.shadowOffsetY = 0
 }
 
-function makeDiscTexture(
-  item: ThreeCDCarouselItem,
-  index: number,
-  onReady: () => void,
-) {
+function makeFallbackTexture(item: ThreeCDCarouselItem, index: number) {
   const canvas = document.createElement('canvas')
   canvas.width = 1024
   canvas.height = 1024
@@ -86,30 +82,23 @@ function makeDiscTexture(
   gradient.addColorStop(1, to)
   context.fillStyle = gradient
   context.fillRect(0, 0, canvas.width, canvas.height)
+  drawDiscInfo(context, item)
+  texture.needsUpdate = true
+  return texture
+}
 
-  if (!item.image) {
-    drawDiscInfo(context, item)
-    texture.needsUpdate = true
-    return texture
-  }
-
-  const image = new Image()
-  image.crossOrigin = 'anonymous'
-  image.onload = () => {
+function makeInfoTexture(item: ThreeCDCarouselItem) {
+  const canvas = document.createElement('canvas')
+  canvas.width = 1024
+  canvas.height = 1024
+  const context = canvas.getContext('2d')
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  if (context) {
     context.clearRect(0, 0, canvas.width, canvas.height)
-    context.fillStyle = '#eceff1'
-    context.fillRect(0, 0, canvas.width, canvas.height)
-    context.drawImage(image, 0, 0, canvas.width, canvas.height)
     drawDiscInfo(context, item)
     texture.needsUpdate = true
-    onReady()
   }
-  image.onerror = () => {
-    drawDiscInfo(context, item)
-    texture.needsUpdate = true
-    onReady()
-  }
-  image.src = item.image
   return texture
 }
 
@@ -342,6 +331,8 @@ export default function ThreeCDCarousel({
       envMapIntensity: 0.78,
       side: THREE.DoubleSide,
     })
+    const textureLoader = new THREE.TextureLoader()
+    textureLoader.setCrossOrigin('anonymous')
     const groups: THREE.Group[] = []
     const disposeItems: Array<() => void> = []
 
@@ -351,18 +342,18 @@ export default function ThreeCDCarousel({
       group.userData.distance = 0
       groups.push(group)
 
-      const texture = makeDiscTexture(item, index, () => wakeRenderRef.current())
+      const texture = item.image
+        ? textureLoader.load(item.image, () => wakeRenderRef.current())
+        : makeFallbackTexture(item, index)
       texture.colorSpace = THREE.SRGBColorSpace
       texture.anisotropy = renderer.capabilities.getMaxAnisotropy()
       if (!item.image) texture.needsUpdate = true
+      const infoTexture = makeInfoTexture(item)
 
-      const material = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
+      const material = new THREE.MeshBasicMaterial({
         map: texture,
-        roughness: 0.52,
-        metalness: 0,
-        envMapIntensity: 0.45,
         side: THREE.DoubleSide,
+        toneMapped: false,
       })
 
       const baseDisc = new THREE.Mesh(discGeometry, ringMaterial)
@@ -376,6 +367,17 @@ export default function ThreeCDCarousel({
       disc.receiveShadow = true
       group.userData.discMesh = disc
       group.add(disc)
+
+      const infoMaterial = new THREE.MeshBasicMaterial({
+        map: infoTexture,
+        transparent: true,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      })
+      const info = new THREE.Mesh(discGeometry, infoMaterial)
+      info.position.z = 0.032
+      info.renderOrder = 2
+      group.add(info)
 
       const rim = new THREE.Mesh(rimGeometry, rimMaterial)
       rim.position.z = 0.018
@@ -392,6 +394,8 @@ export default function ThreeCDCarousel({
       disposeItems.push(() => {
         material.dispose()
         texture.dispose()
+        infoMaterial.dispose()
+        infoTexture.dispose()
       })
     })
 
