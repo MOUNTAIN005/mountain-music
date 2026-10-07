@@ -673,7 +673,7 @@ export default function ThreeCDCarousel({
       camera.position.z = width < 640 ? 11.8 : 12.4
       camera.updateProjectionMatrix()
       camera.updateMatrixWorld()
-      sceneRoot.position.set(width < 640 ? 0.62 : 1.5, -0.04, 0)
+      sceneRoot.position.set(width < 640 ? 0.62 : 1.5, width < 640 ? -1.65 : -0.04, 0)
       updateInfoPanelRect()
       wakeRenderRef.current()
     }
