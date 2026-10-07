@@ -126,6 +126,7 @@ export default function UploadField({ accept, label, onUpload, currentUrl, previ
 
       const blob = await blobClient.upload(data.storagePath, file, {
         clientToken: data.clientToken,
+        multipart: file.size > 5 * 1024 * 1024,
         onUploadProgress: (progress: { loaded: number; total: number }) => {
           const pct = progress.total ? Math.round((progress.loaded / progress.total) * 100) : 0
           setProgress(pct)
