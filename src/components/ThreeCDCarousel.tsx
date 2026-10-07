@@ -343,7 +343,8 @@ export default function ThreeCDCarousel({
     if (!node || displayItems.length < 2) return
 
     const itemCount = displayItems.length
-    const centerIndex = Math.floor(itemCount / 2)
+    const playableIndex = displayItems.findIndex((item) => Boolean(item.song?.audioUrl))
+    const centerIndex = playableIndex >= 0 ? playableIndex : Math.floor(itemCount / 2)
     const centerPage = Math.floor(LOOP_CYCLES / 2) * itemCount + centerIndex
     const frame = window.requestAnimationFrame(() => {
       node.scrollTo({ top: centerPage * node.clientHeight, behavior: 'instant' })
@@ -945,7 +946,7 @@ export default function ThreeCDCarousel({
               className="pointer-events-auto mt-4 inline-flex h-10 items-center gap-2 rounded-full bg-black px-4 text-xs font-medium text-white transition hover:scale-[1.03] hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-30 sm:mt-7 sm:h-12 sm:gap-3 sm:px-5 sm:text-sm"
             >
               {isInfoPlaying ? <Pause size={15} fill="currentColor" /> : <Play size={15} fill="currentColor" />}
-              {isInfoPlaying ? '暂停播放' : '播放歌曲'}
+              {!infoSong?.audioUrl ? '暂无音频' : isInfoPlaying ? '暂停播放' : '播放歌曲'}
             </button>
           </div>
 
