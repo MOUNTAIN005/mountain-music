@@ -124,8 +124,10 @@ export default function UploadField({ accept, label, onUpload, currentUrl, previ
         return false
       }
 
-      const blob = await blobClient.upload(data.storagePath, file, {
-        clientToken: data.clientToken,
+      const blob = await blobClient.put(data.storagePath, file, {
+        access: 'public',
+        token: data.clientToken,
+        contentType: file.type || undefined,
         multipart: file.size > 5 * 1024 * 1024,
         onUploadProgress: (progress: { loaded: number; total: number }) => {
           const pct = progress.total ? Math.round((progress.loaded / progress.total) * 100) : 0
@@ -137,7 +139,8 @@ export default function UploadField({ accept, label, onUpload, currentUrl, previ
       setStatus('success')
       setTimeout(() => setStatus('idle'), 3000)
       return true
-    } catch {
+    } catch (error) {
+      console.error('[Direct upload failed]', error)
       return false
     }
   }
