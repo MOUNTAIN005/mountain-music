@@ -6,8 +6,16 @@ import { cacheHeaders, getAlbums } from '@/lib/public-data'
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url); const showAll = url.searchParams.get("all") === "true";
-    const albums = await getAlbums(showAll)
-    return NextResponse.json({ success: true, data: albums }, { headers: cacheHeaders })
+    const albums = showAll
+      ? await prisma.album.findMany({
+          include: { songs: true },
+          orderBy: { createdAt: 'desc' },
+        })
+      : await getAlbums(false)
+    return NextResponse.json(
+      { success: true, data: albums },
+      { headers: showAll ? { 'Cache-Control': 'no-store, max-age=0' } : cacheHeaders },
+    )
   } catch (error) {
     console.error('Get albums error:', error)
     return NextResponse.json(
