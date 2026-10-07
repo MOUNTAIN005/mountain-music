@@ -331,13 +331,12 @@ export default function ThreeCDCarousel({
       envMapIntensity: 0.78,
       side: THREE.DoubleSide,
     })
-    const caseBackMaterial = new THREE.MeshStandardMaterial({
-      color: 0xeef2f5,
-      metalness: 0.12,
-      roughness: 0.28,
+    const caseBackMaterial = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
       transparent: true,
-      opacity: 0.72,
+      opacity: 0.94,
       side: THREE.DoubleSide,
+      toneMapped: false,
     })
     const caseEdgeMaterial = new THREE.MeshStandardMaterial({
       color: 0xdce3e9,
@@ -405,6 +404,7 @@ export default function ThreeCDCarousel({
     const textureLoader = new THREE.TextureLoader()
     textureLoader.setCrossOrigin('anonymous')
     const groups: THREE.Group[] = []
+    const coverTextures: THREE.Texture[] = []
     const disposeItems: Array<() => void> = []
 
     displayItems.forEach((item, index) => {
@@ -419,6 +419,7 @@ export default function ThreeCDCarousel({
       texture.colorSpace = THREE.SRGBColorSpace
       texture.anisotropy = renderer.capabilities.getMaxAnisotropy()
       if (!item.image) texture.needsUpdate = true
+      coverTextures[index] = texture
       const infoTexture = makeInfoTexture(item)
 
       const material = new THREE.MeshBasicMaterial({
@@ -522,6 +523,18 @@ export default function ThreeCDCarousel({
         const opacity = revealProgress * edgeFade
         const visible = opacity > 0.01
         const focus = Math.max(0, 1 - distance * 0.36)
+
+        if (index === 0) {
+          const caseIndex = Math.max(
+            0,
+            Math.min(displayItems.length - 1, Math.round(smoothIndexRef.current) + 2),
+          )
+          const caseTexture = coverTextures[caseIndex]
+          if (caseTexture && caseBackMaterial.map !== caseTexture) {
+            caseBackMaterial.map = caseTexture
+            caseBackMaterial.needsUpdate = true
+          }
+        }
 
         group.visible = visible
         group.position.set(point.x, point.y, -distance * 0.86)
