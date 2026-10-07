@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Pause, Play } from 'lucide-react'
 import { useAudioPlayer } from '@/hooks/useAudioPlayer'
@@ -99,6 +100,41 @@ function makeInfoTexture(item: ThreeCDCarouselItem) {
     drawDiscInfo(context, item)
     texture.needsUpdate = true
   }
+  return texture
+}
+
+function makeCaseReflectionTexture() {
+  const canvas = document.createElement('canvas')
+  canvas.width = 512
+  canvas.height = 512
+  const context = canvas.getContext('2d')
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  if (!context) return texture
+
+  const diagonal = context.createLinearGradient(40, 0, 470, 512)
+  diagonal.addColorStop(0, 'rgba(255,255,255,0.5)')
+  diagonal.addColorStop(0.16, 'rgba(255,255,255,0.12)')
+  diagonal.addColorStop(0.34, 'rgba(255,255,255,0)')
+  diagonal.addColorStop(1, 'rgba(255,255,255,0)')
+  context.fillStyle = diagonal
+  context.fillRect(0, 0, 512, 512)
+
+  context.lineWidth = 8
+  context.strokeStyle = 'rgba(255,255,255,0.34)'
+  context.beginPath()
+  context.moveTo(18, 58)
+  context.lineTo(454, 0)
+  context.stroke()
+
+  context.lineWidth = 4
+  context.strokeStyle = 'rgba(255,255,255,0.22)'
+  context.beginPath()
+  context.moveTo(0, 492)
+  context.lineTo(512, 302)
+  context.stroke()
+
+  texture.needsUpdate = true
   return texture
 }
 
@@ -338,29 +374,74 @@ export default function ThreeCDCarousel({
       side: THREE.DoubleSide,
       toneMapped: false,
     })
-    const caseEdgeMaterial = new THREE.MeshStandardMaterial({
-      color: 0xdce3e9,
-      metalness: 0.32,
-      roughness: 0.2,
+    const caseEdgeMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xe8f1f7,
+      metalness: 0.08,
+      roughness: 0.08,
       transparent: true,
-      opacity: 0.9,
+      opacity: 0.62,
+      clearcoat: 1,
+      clearcoatRoughness: 0.03,
+      envMapIntensity: 1.25,
       side: THREE.DoubleSide,
     })
-    const caseGlassMaterial = new THREE.MeshBasicMaterial({
+    const caseTrayMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x27313b,
+      metalness: 0.08,
+      roughness: 0.3,
+      transmission: 0.18,
+      thickness: 0.24,
+      transparent: true,
+      opacity: 0.44,
+      clearcoat: 0.35,
+      clearcoatRoughness: 0.18,
+      side: THREE.DoubleSide,
+    })
+    const caseShellMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xffffff,
+      metalness: 0,
+      roughness: 0.06,
+      transmission: 0.86,
+      thickness: 0.2,
+      ior: 1.46,
+      transparent: true,
+      opacity: 0.32,
+      clearcoat: 1,
+      clearcoatRoughness: 0.025,
+      envMapIntensity: 1.35,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    })
+    const caseRingMaterial = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
-      opacity: 0.07,
+      opacity: 0.1,
       depthWrite: false,
       side: THREE.DoubleSide,
       toneMapped: false,
     })
     const caseBackGeometry = new THREE.PlaneGeometry(3.1, 2.86)
-    const caseEdgeHorizontalGeometry = new THREE.BoxGeometry(3.12, 0.1, 0.12)
-    const caseEdgeVerticalGeometry = new THREE.BoxGeometry(0.1, 2.86, 0.12)
-    const caseSpineGeometry = new THREE.BoxGeometry(0.18, 2.96, 0.15)
+    const caseEdgeHorizontalGeometry = new THREE.BoxGeometry(3.12, 0.14, 0.16)
+    const caseEdgeVerticalGeometry = new THREE.BoxGeometry(0.14, 2.86, 0.16)
+    const caseSpineGeometry = new THREE.BoxGeometry(0.22, 2.96, 0.2)
+    const caseTrayGeometry = new RoundedBoxGeometry(3.08, 2.84, 0.1, 5, 0.08)
+    const caseShellGeometry = new RoundedBoxGeometry(3.15, 2.91, 0.12, 6, 0.1)
+    const caseRingGeometry = new THREE.RingGeometry(0.42, 1.08, 96, 1)
+    const hingeGeometry = new THREE.CylinderGeometry(0.048, 0.048, 0.34, 16)
+    const caseReflectionTexture = makeCaseReflectionTexture()
+    const caseReflectionMaterial = new THREE.MeshBasicMaterial({
+      map: caseReflectionTexture,
+      transparent: true,
+      opacity: 0.68,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      toneMapped: false,
+    })
+    const caseReflectionGeometry = new THREE.PlaneGeometry(3.02, 2.8)
 
     const caseGroup = new THREE.Group()
-    const sourcePoint = cubicPoint(0, 4.25, 2.45)
+    const sourcePoint = cubicPoint(0, 3.2, 1.85)
     caseGroup.position.set(sourcePoint.x, sourcePoint.y, -1.86)
     caseGroup.rotation.set(-0.08, -0.26, -0.37)
     caseGroup.scale.setScalar(0.82)
@@ -368,14 +449,29 @@ export default function ThreeCDCarousel({
     sceneRoot.add(caseGroup)
 
     const caseBack = new THREE.Mesh(caseBackGeometry, caseBackMaterial)
-    caseBack.position.z = -0.1
+    caseBack.position.z = 0
     caseBack.receiveShadow = true
     caseGroup.add(caseBack)
 
-    const caseGlass = new THREE.Mesh(caseBackGeometry, caseGlassMaterial)
-    caseGlass.position.z = 0.08
-    caseGlass.renderOrder = 1
-    caseGroup.add(caseGlass)
+    const caseTray = new THREE.Mesh(caseTrayGeometry, caseTrayMaterial)
+    caseTray.position.z = -0.08
+    caseTray.receiveShadow = true
+    caseGroup.add(caseTray)
+
+    const caseRing = new THREE.Mesh(caseRingGeometry, caseRingMaterial)
+    caseRing.position.z = 0.04
+    caseRing.renderOrder = 1
+    caseGroup.add(caseRing)
+
+    const caseShell = new THREE.Mesh(caseShellGeometry, caseShellMaterial)
+    caseShell.position.z = 0.14
+    caseShell.renderOrder = 2
+    caseGroup.add(caseShell)
+
+    const caseReflection = new THREE.Mesh(caseReflectionGeometry, caseReflectionMaterial)
+    caseReflection.position.z = 0.22
+    caseReflection.renderOrder = 3
+    caseGroup.add(caseReflection)
 
     const topEdge = new THREE.Mesh(caseEdgeHorizontalGeometry, caseEdgeMaterial)
     topEdge.position.set(0, 1.43, 0.02)
@@ -401,6 +497,14 @@ export default function ThreeCDCarousel({
     spine.position.set(1.58, 0, -0.04)
     spine.castShadow = true
     caseGroup.add(spine)
+
+    for (const y of [-0.88, 0, 0.88]) {
+      const hinge = new THREE.Mesh(hingeGeometry, caseEdgeMaterial)
+      hinge.position.set(1.64, y, -0.02)
+      hinge.rotation.z = Math.PI / 2
+      hinge.castShadow = true
+      caseGroup.add(hinge)
+    }
     const textureLoader = new THREE.TextureLoader()
     textureLoader.setCrossOrigin('anonymous')
     const groups: THREE.Group[] = []
@@ -517,7 +621,7 @@ export default function ThreeCDCarousel({
         const offset = index - smoothIndexRef.current
         const distance = Math.abs(offset)
         const u = (2 - offset) / 4
-        const point = cubicPoint(u, 4.25, 2.45)
+        const point = cubicPoint(u, 3.2, 1.85)
         const revealProgress = Math.max(0, Math.min(1, (2 - offset) / 0.72))
         const edgeFade = distance > 2.7 ? Math.max(0, 1 - (distance - 2.7) * 0.72) : 1
         const opacity = revealProgress * edgeFade
@@ -606,7 +710,16 @@ export default function ThreeCDCarousel({
       caseSpineGeometry.dispose()
       caseBackMaterial.dispose()
       caseEdgeMaterial.dispose()
-      caseGlassMaterial.dispose()
+      caseTrayGeometry.dispose()
+      caseShellGeometry.dispose()
+      caseRingGeometry.dispose()
+      hingeGeometry.dispose()
+      caseReflectionGeometry.dispose()
+      caseReflectionTexture.dispose()
+      caseTrayMaterial.dispose()
+      caseShellMaterial.dispose()
+      caseRingMaterial.dispose()
+      caseReflectionMaterial.dispose()
       shadowPlane.geometry.dispose()
       shadowPlane.material.dispose()
       pmremGenerator.dispose()
