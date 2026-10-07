@@ -908,11 +908,26 @@ export default function ThreeCDCarousel({
               {infoItem.title}
             </h1>
             <p className="mt-2 w-full break-words text-[10px] uppercase tracking-[0.16em] text-black/45 sm:mt-3 sm:text-xs sm:tracking-[0.18em]">{infoItem.meta}</p>
-            {infoItem.description && (
-              <p className="mt-3 w-full break-words text-[11px] leading-relaxed text-black/50 sm:mt-5 sm:text-xs">
-                {infoItem.description}
-              </p>
-            )}
+            <div className="mt-3 h-10 w-full overflow-hidden sm:mt-5 sm:h-12">
+              <AnimatePresence mode="wait">
+                {currentLyric ? (
+                  <motion.p
+                    key={`${infoSong?.id}-${lyricIndex}`}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.28 }}
+                    className="w-full break-words text-[11px] leading-5 text-black/60 sm:text-xs sm:leading-6"
+                  >
+                    {currentLyric}
+                  </motion.p>
+                ) : infoItem.description ? (
+                  <p key={`description-${infoItem.id}`} className="w-full break-words text-[11px] leading-5 text-black/50 sm:text-xs sm:leading-6">
+                    {infoItem.description}
+                  </p>
+                ) : null}
+              </AnimatePresence>
+            </div>
             <div className="mt-5 space-y-1.5 text-[9px] uppercase tracking-[0.14em] text-black/40 sm:mt-8 sm:space-y-2 sm:text-[10px] sm:tracking-[0.16em]">
               <div className="flex justify-between gap-4 border-t border-black/15 pt-2 sm:gap-10">
                 <span>Artist</span>
@@ -932,30 +947,6 @@ export default function ThreeCDCarousel({
               {isInfoPlaying ? <Pause size={15} fill="currentColor" /> : <Play size={15} fill="currentColor" />}
               {isInfoPlaying ? '暂停播放' : '播放歌曲'}
             </button>
-          </div>
-
-          <div className="pointer-events-none absolute left-5 top-[330px] z-30 w-[66vw] max-w-[260px] translate-x-0 overflow-hidden border-l-2 border-black/10 pl-3 sm:left-10 sm:top-[458px] sm:w-[80vw] sm:max-w-[320px] sm:translate-x-[20%] sm:pl-4 lg:top-[474px]">
-            <p className="mb-2 text-[9px] uppercase tracking-[0.22em] text-black/35">Lyrics</p>
-            <div className="h-12 w-full overflow-hidden">
-              <AnimatePresence mode="wait">
-                {currentLyric ? (
-                  <motion.p
-                    key={`${infoSong?.id}-${lyricIndex}`}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.28 }}
-                    className="w-full break-words text-sm leading-6 text-black/65"
-                  >
-                    {currentLyric}
-                  </motion.p>
-                ) : (
-                  <p key="lyrics-waiting" className="text-xs leading-6 text-black/30">
-                    播放后逐句显示歌词
-                  </p>
-                )}
-              </AnimatePresence>
-            </div>
           </div>
 
           <div className="pointer-events-none absolute inset-0 z-20">
