@@ -427,7 +427,14 @@ export default function ThreeCDCarousel({
         toneMapped: false,
       })
 
-      const baseDisc = new THREE.Mesh(discGeometry, ringMaterial)
+      const baseMaterial = ringMaterial.clone()
+      const rimEdgeMaterial = rimMaterial.clone()
+      const centerHubMaterial = hubMaterial.clone()
+      baseMaterial.transparent = true
+      rimEdgeMaterial.transparent = true
+      centerHubMaterial.transparent = true
+
+      const baseDisc = new THREE.Mesh(discGeometry, baseMaterial)
       baseDisc.position.z = 0
       baseDisc.receiveShadow = true
       group.add(baseDisc)
@@ -450,19 +457,23 @@ export default function ThreeCDCarousel({
       info.renderOrder = 2
       group.add(info)
 
-      const rim = new THREE.Mesh(rimGeometry, rimMaterial)
+      const rim = new THREE.Mesh(rimGeometry, rimEdgeMaterial)
       rim.position.z = 0.018
       rim.castShadow = true
       group.add(rim)
 
-      const hub = new THREE.Mesh(hubGeometry, hubMaterial)
+      const hub = new THREE.Mesh(hubGeometry, centerHubMaterial)
       hub.position.z = 0.026
       hub.castShadow = true
       group.add(hub)
 
       group.rotation.order = 'XYZ'
+      group.userData.materials = [baseMaterial, rimEdgeMaterial, centerHubMaterial, material, infoMaterial]
       sceneRoot.add(group)
       disposeItems.push(() => {
+        baseMaterial.dispose()
+        rimEdgeMaterial.dispose()
+        centerHubMaterial.dispose()
         material.dispose()
         texture.dispose()
         infoMaterial.dispose()
@@ -506,7 +517,10 @@ export default function ThreeCDCarousel({
         const distance = Math.abs(offset)
         const u = (2 - offset) / 4
         const point = cubicPoint(u, 4.25, 2.45)
-        const visible = distance < 3.45
+        const revealProgress = Math.max(0, Math.min(1, (2 - offset) / 0.72))
+        const edgeFade = distance > 2.7 ? Math.max(0, 1 - (distance - 2.7) * 0.72) : 1
+        const opacity = revealProgress * edgeFade
+        const visible = opacity > 0.01
         const focus = Math.max(0, 1 - distance * 0.36)
 
         group.visible = visible
@@ -515,6 +529,11 @@ export default function ThreeCDCarousel({
         group.rotation.x = -0.08 + Math.sin(u * Math.PI) * 0.07
         group.rotation.y = (u - 0.5) * 0.52
         group.rotation.z = -0.16 + (u - 0.5) * 0.42
+        const materialList = group.userData.materials as THREE.Material[]
+        materialList.forEach((entry) => {
+          entry.transparent = true
+          entry.opacity = opacity
+        })
 
         if (playbackActive && displayItems[index]?.song?.id === playingSongIdRef.current) {
           const discMesh = group.userData.discMesh as THREE.Mesh | undefined
@@ -530,8 +549,8 @@ export default function ThreeCDCarousel({
           const screenY = (-projectedPosition.y * 0.5 + 0.5) * container.clientHeight
           const buttonScale = 0.82 + focus * 0.32
 
-          button.style.opacity = visible ? String(Math.max(0.28, 1 - Math.max(0, distance - 1.8) * 0.48)) : '0'
-          button.style.pointerEvents = visible ? 'auto' : 'none'
+          button.style.opacity = visible ? String(opacity * Math.max(0.28, 1 - Math.max(0, distance - 1.8) * 0.48)) : '0'
+          button.style.pointerEvents = visible && opacity > 0.2 ? 'auto' : 'none'
           button.style.zIndex = String(40 - Math.round(distance * 5))
           button.style.transform = `translate3d(${screenX}px, ${screenY}px, 0) translate(-50%, -50%) scale(${buttonScale})`
         }
