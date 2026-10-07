@@ -54,6 +54,11 @@ export default function AdminRecommendPage() {
     setSongs(s)
   }
 
+  const getLinkedSong = (song: RecSong) => allSongs.find((option) => (
+    (song.audioUrl && option.audioUrl === song.audioUrl)
+    || (!song.audioUrl && option.title === song.title && option.artist === song.artist)
+  ))
+
   const save = async () => {
     setSaving(true)
     setSaveMessage('')
@@ -119,17 +124,22 @@ export default function AdminRecommendPage() {
               <div className="col-span-2">
                 <label className="text-xs text-gray-400 block mb-1.5">关联专辑歌曲</label>
                 <select
+                  value={getLinkedSong(s)?.id?.toString() || ''}
                   onChange={e => { const opt = allSongs.find(o => o.id === parseInt(e.target.value)); if (opt) selectSong(i, opt) }}
                   className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-accent-purple/50"
-                  defaultValue=""
                 >
                   <option value="" disabled>选择歌曲...</option>
                   {allSongs.map(o => (
                     <option key={o.id} value={o.id}>{o.title} — {o.artist}{o.album ? ` (${o.album.title})` : ''}</option>
                   ))}
                 </select>
-                {s.audioUrl && (
-                  <p className="text-[10px] text-green-500/70 mt-1">已关联音频</p>
+                {getLinkedSong(s) && (
+                  <p className="text-[10px] text-green-500/70 mt-1">
+                    已关联专辑歌曲：{getLinkedSong(s)?.title} — {getLinkedSong(s)?.artist}
+                  </p>
+                )}
+                {s.audioUrl && !getLinkedSong(s) && (
+                  <p className="text-[10px] text-green-500/70 mt-1">已上传音频文件</p>
                 )}
               </div>
 
