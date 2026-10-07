@@ -230,7 +230,7 @@ export default function ThreeCDCarousel({
   useEffect(() => {
     if (items) return
 
-    const mapSongs = (songs: Partial<Song>[]) => songs.slice(0, 5).map((song, index) => {
+    const mapSongs = (songs: Partial<Song>[]) => songs.map((song, index) => {
       const id = typeof song.id === 'number' ? song.id : -(400 + index)
       const coverUrl = apiFileUrl(song.coverUrl)
       const audioUrl = apiFileUrl(song.audioUrl) || ''
