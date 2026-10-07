@@ -934,15 +934,8 @@ export default function ThreeCDCarousel({
                 <span className="min-w-0 truncate text-right">{infoItem.meta}</span>
               </div>
               <div className="flex justify-between gap-4 border-t border-black/15 pt-2 sm:gap-10">
-                <span>Format</span>
-                <a
-                  href="https://mountainmusic.vip"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="pointer-events-auto text-right text-black/50 underline decoration-black/20 underline-offset-2 transition-colors hover:text-black"
-                >
-                  mountainmusic.vip
-                </a>
+                <span>Website</span>
+                <span className="text-right text-black/50">https://mountainmusic.vip</span>
               </div>
             </div>
             <button
