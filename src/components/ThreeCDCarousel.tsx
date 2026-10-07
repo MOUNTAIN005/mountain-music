@@ -670,7 +670,7 @@ export default function ThreeCDCarousel({
 
       renderer.setSize(width, height)
       camera.aspect = width / height
-      camera.position.z = width < 640 ? 14.8 : 12.4
+      camera.position.z = width < 640 ? 11.8 : 12.4
       camera.updateProjectionMatrix()
       camera.updateMatrixWorld()
       sceneRoot.position.set(width < 640 ? 0.62 : 1.5, -0.04, 0)
