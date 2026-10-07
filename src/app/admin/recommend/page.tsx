@@ -46,7 +46,7 @@ export default function AdminRecommendPage() {
       title: option.title,
       artist: option.artist || '山影知道',
       coverUrl: option.coverUrl || s[idx].coverUrl,
-      audioUrl: option.audioUrl || '',
+      audioUrl: option.audioUrl || s[idx].audioUrl,
       description: option.description || '',
       lyrics: option.lyrics || '',
       album: option.album?.title || '',
@@ -136,6 +136,11 @@ export default function AdminRecommendPage() {
                 {getLinkedSong(s) && (
                   <p className="text-[10px] text-green-500/70 mt-1">
                     已关联专辑歌曲：{getLinkedSong(s)?.title} — {getLinkedSong(s)?.artist}
+                  </p>
+                )}
+                {getLinkedSong(s) && !getLinkedSong(s)?.audioUrl && !s.audioUrl && (
+                  <p className="text-[10px] text-amber-400 mt-1">
+                    关联歌曲暂无音频，请在“歌曲文件”处上传
                   </p>
                 )}
                 {s.audioUrl && !getLinkedSong(s) && (
