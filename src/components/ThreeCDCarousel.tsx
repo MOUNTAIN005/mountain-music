@@ -935,7 +935,7 @@ export default function ThreeCDCarousel({
               </div>
               <div className="flex justify-between gap-4 border-t border-black/15 pt-2 sm:gap-10">
                 <span>Website</span>
-                <span className="text-right text-black/50">https://mountainmusic.vip</span>
+                <span className="normal-case text-right text-black/50">https://mountainmusic.vip</span>
               </div>
             </div>
             <button
