@@ -31,6 +31,9 @@ const fallbackItems: ThreeCDCarouselItem[] = [
   { id: 5, title: 'Final Scene', meta: 'MOUNTAIN MUSIC', image: null, description: '每一段回声，都值得被认真收藏。' },
 ]
 
+const LOOP_CYCLES = 9
+const LOOP_EDGE_CYCLES = 2
+
 const fallbackGradients = [
   ['#75dcff', '#3979ff'],
   ['#ffd075', '#ff8a3d'],
@@ -195,6 +198,15 @@ function getInfoPanelCoverage(
   return Math.min(1, overlapArea / (discArea * 0.55))
 }
 
+function getLoopOffset(index: number, smoothIndex: number, itemCount: number) {
+  const wrappedOffset = ((index - smoothIndex) % itemCount + itemCount) % itemCount
+  return wrappedOffset > itemCount / 2 ? wrappedOffset - itemCount : wrappedOffset
+}
+
+function getWrappedIndex(index: number, itemCount: number) {
+  return ((index % itemCount) + itemCount) % itemCount
+}
+
 export default function ThreeCDCarousel({
   items,
   className = '',
@@ -204,6 +216,7 @@ export default function ThreeCDCarousel({
   const containerRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const scrollFrame = useRef<number | null>(null)
+  const isRecenteringRef = useRef(false)
   const targetIndexRef = useRef(0)
   const smoothIndexRef = useRef(0)
   const wakeRenderRef = useRef<() => void>(() => {})
@@ -273,8 +286,18 @@ export default function ThreeCDCarousel({
 
   const goTo = useCallback((index: number) => {
     const node = scrollRef.current
-    if (!node) return
-    const nextIndex = Math.max(0, Math.min(displayItems.length - 1, index))
+    if (!node || displayItems.length === 0) return
+
+    const itemCount = displayItems.length
+    const targetIndex = getWrappedIndex(index, itemCount)
+    const currentIndex = targetIndexRef.current
+    const currentWrappedIndex = getWrappedIndex(Math.round(currentIndex), itemCount)
+    let delta = targetIndex - currentWrappedIndex
+
+    if (delta > itemCount / 2) delta -= itemCount
+    if (delta < -itemCount / 2) delta += itemCount
+
+    const nextIndex = currentIndex + delta
     node.scrollTo({ top: nextIndex * node.clientHeight, behavior: 'smooth' })
   }, [displayItems.length])
 
@@ -285,12 +308,32 @@ export default function ThreeCDCarousel({
       scrollFrame.current = null
       const node = scrollRef.current
       if (!node || displayItems.length < 2) return
+      if (isRecenteringRef.current) return
 
-      const maxScroll = (displayItems.length - 1) * node.clientHeight
-      const progress = maxScroll > 0 ? node.scrollTop / maxScroll : 0
-      const nextIndex = Math.max(0, Math.min(displayItems.length - 1, progress * (displayItems.length - 1)))
-      targetIndexRef.current = nextIndex
-      setActiveIndex(Math.round(nextIndex))
+      const itemCount = displayItems.length
+      const pageIndex = node.scrollTop / node.clientHeight
+      const minPage = itemCount * LOOP_EDGE_CYCLES
+      const maxPage = itemCount * (LOOP_CYCLES - LOOP_EDGE_CYCLES)
+
+      if (pageIndex < minPage || pageIndex > maxPage) {
+        // Shift by complete cycles so the wrapped view stays visually identical.
+        const shift = pageIndex < minPage
+          ? itemCount * LOOP_EDGE_CYCLES
+          : -itemCount * LOOP_EDGE_CYCLES
+
+        targetIndexRef.current += shift
+        smoothIndexRef.current += shift
+        isRecenteringRef.current = true
+        node.scrollTo({ top: (pageIndex + shift) * node.clientHeight, behavior: 'instant' })
+        window.requestAnimationFrame(() => {
+          isRecenteringRef.current = false
+        })
+        wakeRenderRef.current()
+        return
+      }
+
+      targetIndexRef.current = pageIndex
+      setActiveIndex(getWrappedIndex(Math.round(pageIndex), itemCount))
       wakeRenderRef.current()
     })
   }
@@ -299,11 +342,13 @@ export default function ThreeCDCarousel({
     const node = scrollRef.current
     if (!node || displayItems.length < 2) return
 
-    const centerIndex = Math.floor(displayItems.length / 2)
+    const itemCount = displayItems.length
+    const centerIndex = Math.floor(itemCount / 2)
+    const centerPage = Math.floor(LOOP_CYCLES / 2) * itemCount + centerIndex
     const frame = window.requestAnimationFrame(() => {
-      node.scrollTo({ top: centerIndex * node.clientHeight, behavior: 'instant' })
-      targetIndexRef.current = centerIndex
-      smoothIndexRef.current = centerIndex
+      node.scrollTo({ top: centerPage * node.clientHeight, behavior: 'instant' })
+      targetIndexRef.current = centerPage
+      smoothIndexRef.current = centerPage
       setActiveIndex(centerIndex)
     })
 
@@ -660,7 +705,7 @@ export default function ThreeCDCarousel({
       }> = []
 
       groups.forEach((group, index) => {
-        const offset = index - smoothIndexRef.current
+        const offset = getLoopOffset(index, smoothIndexRef.current, displayItems.length)
         const distance = Math.abs(offset)
         const u = (2 - offset) / 4
         const point = cubicPoint(u, 3.2, 1.85)
@@ -669,10 +714,7 @@ export default function ThreeCDCarousel({
         const focus = Math.max(0, 1 - distance * 0.36)
 
         if (index === 0) {
-          const caseIndex = Math.max(
-            0,
-            Math.min(displayItems.length - 1, Math.round(smoothIndexRef.current) + 2),
-          )
+          const caseIndex = getWrappedIndex(Math.round(smoothIndexRef.current) + 2, displayItems.length)
           const caseTexture = coverTextures[caseIndex]
           if (caseTexture && caseBackMaterial.map !== caseTexture) {
             caseBackMaterial.map = caseTexture
@@ -942,9 +984,9 @@ export default function ThreeCDCarousel({
           </div>
         </div>
 
-        {displayItems.slice(1).map((item) => (
+        {Array.from({ length: displayItems.length * LOOP_CYCLES - 1 }, (_, pageIndex) => (
           <div
-            key={`scroll-stop-${item.id}`}
+            key={`scroll-stop-${pageIndex}`}
             className="pointer-events-none h-screen snap-start snap-always"
             aria-hidden="true"
           />
