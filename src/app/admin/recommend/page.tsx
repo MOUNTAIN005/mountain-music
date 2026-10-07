@@ -111,6 +111,10 @@ export default function AdminRecommendPage() {
                 <UploadField accept="image/*" label={`封面${i+1}`} onUpload={(url) => upd(i, 'coverUrl', url)} currentUrl={s.coverUrl} preview />
               </div>
 
+              <div className="col-span-2">
+                <UploadField accept="audio/*" label={`歌曲文件${i+1}`} onUpload={(url) => upd(i, 'audioUrl', url)} currentUrl={s.audioUrl} />
+              </div>
+
               {/* Song selector from existing albums */}
               <div className="col-span-2">
                 <label className="text-xs text-gray-400 block mb-1.5">关联专辑歌曲</label>
