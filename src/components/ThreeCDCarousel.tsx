@@ -442,7 +442,8 @@ export default function ThreeCDCarousel({
 
     const caseGroup = new THREE.Group()
     const sourcePoint = cubicPoint(0, 3.2, 1.85)
-    caseGroup.position.set(sourcePoint.x, sourcePoint.y, -1.86)
+    const caseBasePosition = new THREE.Vector3(sourcePoint.x, sourcePoint.y, -1.86)
+    caseGroup.position.copy(caseBasePosition)
     caseGroup.rotation.set(-0.08, -0.26, -0.37)
     caseGroup.scale.setScalar(0.82)
     caseGroup.renderOrder = -1
@@ -600,6 +601,59 @@ export default function ThreeCDCarousel({
       camera.position.z = width < 640 ? 14.8 : 12.4
       camera.updateProjectionMatrix()
       sceneRoot.position.set(width < 640 ? 0.62 : 1.5, -0.04, 0)
+      camera.updateMatrixWorld()
+      sceneRoot.updateMatrixWorld(true)
+
+      caseGroup.position.copy(caseBasePosition)
+      caseGroup.updateWorldMatrix(true, true)
+
+      const bounds = {
+        minX: Number.POSITIVE_INFINITY,
+        maxX: Number.NEGATIVE_INFINITY,
+        minY: Number.POSITIVE_INFINITY,
+        maxY: Number.NEGATIVE_INFINITY,
+      }
+
+      for (const x of [-1.65, 1.65]) {
+        for (const y of [-1.48, 1.48]) {
+          for (const z of [-0.16, 0.22]) {
+            const projected = new THREE.Vector3(x, y, z)
+              .applyMatrix4(caseGroup.matrixWorld)
+              .project(camera)
+            const screenX = (projected.x * 0.5 + 0.5) * width
+            const screenY = (-projected.y * 0.5 + 0.5) * height
+            bounds.minX = Math.min(bounds.minX, screenX)
+            bounds.maxX = Math.max(bounds.maxX, screenX)
+            bounds.minY = Math.min(bounds.minY, screenY)
+            bounds.maxY = Math.max(bounds.maxY, screenY)
+          }
+        }
+      }
+
+      const projectedBase = new THREE.Vector3(
+        caseBasePosition.x + sceneRoot.position.x,
+        caseBasePosition.y + sceneRoot.position.y,
+        caseBasePosition.z + sceneRoot.position.z,
+      ).project(camera)
+      const projectedX = new THREE.Vector3(
+        caseBasePosition.x + sceneRoot.position.x + 1,
+        caseBasePosition.y + sceneRoot.position.y,
+        caseBasePosition.z + sceneRoot.position.z,
+      ).project(camera)
+      const projectedY = new THREE.Vector3(
+        caseBasePosition.x + sceneRoot.position.x,
+        caseBasePosition.y + sceneRoot.position.y + 1,
+        caseBasePosition.z + sceneRoot.position.z,
+      ).project(camera)
+      const pixelsPerWorldX = Math.abs(projectedX.x - projectedBase.x) * 0.5 * width
+      const pixelsPerWorldY = Math.abs(projectedY.y - projectedBase.y) * 0.5 * height
+      const targetLinearReveal = Math.sqrt(0.8)
+      const targetMaxX = width + (1 - targetLinearReveal) * (bounds.maxX - bounds.minX)
+      const targetMaxY = height + (1 - targetLinearReveal) * (bounds.maxY - bounds.minY)
+
+      caseGroup.position.x += (targetMaxX - bounds.maxX) / pixelsPerWorldX
+      caseGroup.position.y -= (targetMaxY - bounds.maxY) / pixelsPerWorldY
+      caseGroup.updateWorldMatrix(true, true)
       wakeRenderRef.current()
     }
 
