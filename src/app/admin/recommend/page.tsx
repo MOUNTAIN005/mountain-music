@@ -55,8 +55,8 @@ export default function AdminRecommendPage() {
   }
 
   const getLinkedSong = (song: RecSong) => allSongs.find((option) => (
-    (song.audioUrl && option.audioUrl === song.audioUrl)
-    || (!song.audioUrl && option.title === song.title && option.artist === song.artist)
+    (option.title === song.title && option.artist === song.artist)
+    || (!!song.audioUrl && option.audioUrl === song.audioUrl)
   ))
 
   const save = async () => {
