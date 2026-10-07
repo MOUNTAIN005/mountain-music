@@ -331,6 +331,77 @@ export default function ThreeCDCarousel({
       envMapIntensity: 0.78,
       side: THREE.DoubleSide,
     })
+    const caseBackMaterial = new THREE.MeshStandardMaterial({
+      color: 0xeef2f5,
+      metalness: 0.12,
+      roughness: 0.28,
+      transparent: true,
+      opacity: 0.72,
+      side: THREE.DoubleSide,
+    })
+    const caseEdgeMaterial = new THREE.MeshStandardMaterial({
+      color: 0xdce3e9,
+      metalness: 0.32,
+      roughness: 0.2,
+      transparent: true,
+      opacity: 0.9,
+      side: THREE.DoubleSide,
+    })
+    const caseGlassMaterial = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.07,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      toneMapped: false,
+    })
+    const caseBackGeometry = new THREE.PlaneGeometry(3.1, 2.86)
+    const caseEdgeHorizontalGeometry = new THREE.BoxGeometry(3.12, 0.1, 0.12)
+    const caseEdgeVerticalGeometry = new THREE.BoxGeometry(0.1, 2.86, 0.12)
+    const caseSpineGeometry = new THREE.BoxGeometry(0.18, 2.96, 0.15)
+
+    const caseGroup = new THREE.Group()
+    const sourcePoint = cubicPoint(0, 4.25, 2.45)
+    caseGroup.position.set(sourcePoint.x, sourcePoint.y, -1.86)
+    caseGroup.rotation.set(-0.08, -0.26, -0.37)
+    caseGroup.scale.setScalar(0.82)
+    caseGroup.renderOrder = -1
+    sceneRoot.add(caseGroup)
+
+    const caseBack = new THREE.Mesh(caseBackGeometry, caseBackMaterial)
+    caseBack.position.z = -0.1
+    caseBack.receiveShadow = true
+    caseGroup.add(caseBack)
+
+    const caseGlass = new THREE.Mesh(caseBackGeometry, caseGlassMaterial)
+    caseGlass.position.z = 0.08
+    caseGlass.renderOrder = 1
+    caseGroup.add(caseGlass)
+
+    const topEdge = new THREE.Mesh(caseEdgeHorizontalGeometry, caseEdgeMaterial)
+    topEdge.position.set(0, 1.43, 0.02)
+    topEdge.castShadow = true
+    caseGroup.add(topEdge)
+
+    const bottomEdge = new THREE.Mesh(caseEdgeHorizontalGeometry, caseEdgeMaterial)
+    bottomEdge.position.set(0, -1.43, 0.02)
+    bottomEdge.castShadow = true
+    caseGroup.add(bottomEdge)
+
+    const leftEdge = new THREE.Mesh(caseEdgeVerticalGeometry, caseEdgeMaterial)
+    leftEdge.position.set(-1.51, 0, 0.02)
+    leftEdge.castShadow = true
+    caseGroup.add(leftEdge)
+
+    const rightEdge = new THREE.Mesh(caseEdgeVerticalGeometry, caseEdgeMaterial)
+    rightEdge.position.set(1.51, 0, 0.02)
+    rightEdge.castShadow = true
+    caseGroup.add(rightEdge)
+
+    const spine = new THREE.Mesh(caseSpineGeometry, caseEdgeMaterial)
+    spine.position.set(1.58, 0, -0.04)
+    spine.castShadow = true
+    caseGroup.add(spine)
     const textureLoader = new THREE.TextureLoader()
     textureLoader.setCrossOrigin('anonymous')
     const groups: THREE.Group[] = []
@@ -488,6 +559,7 @@ export default function ThreeCDCarousel({
       wakeRenderRef.current = () => {}
       resizeObserver.disconnect()
       groups.forEach((group) => sceneRoot.remove(group))
+      sceneRoot.remove(caseGroup)
       scene.remove(sceneRoot)
       disposeItems.forEach((dispose) => dispose())
       discGeometry.dispose()
@@ -496,6 +568,13 @@ export default function ThreeCDCarousel({
       ringMaterial.dispose()
       rimMaterial.dispose()
       hubMaterial.dispose()
+      caseBackGeometry.dispose()
+      caseEdgeHorizontalGeometry.dispose()
+      caseEdgeVerticalGeometry.dispose()
+      caseSpineGeometry.dispose()
+      caseBackMaterial.dispose()
+      caseEdgeMaterial.dispose()
+      caseGlassMaterial.dispose()
       shadowPlane.geometry.dispose()
       shadowPlane.material.dispose()
       pmremGenerator.dispose()
