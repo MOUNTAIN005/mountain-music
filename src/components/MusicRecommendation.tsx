@@ -36,7 +36,7 @@ export default function MusicRecommendation() {
   const { play, currentSong, isPlaying, pause, resume, currentTime } = useAudioPlayer()
 
   useEffect(() => {
-    fetch('/api/recommended-songs').then(r => r.json()).then(d => {
+    fetch('/api/recommended-songs', { cache: 'no-store' }).then(r => r.json()).then(d => {
       if (d.success && Array.isArray(d.data) && d.data.length > 0) {
         setSongs(d.data.map((s: any) => ({
           id: -(Math.random() * 1e9),

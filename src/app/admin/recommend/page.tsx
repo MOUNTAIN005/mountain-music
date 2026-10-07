@@ -15,6 +15,7 @@ export default function AdminRecommendPage() {
   const addSong = () => setSongs(prev => [...prev, { title: '', artist: '山影知道', coverUrl: '', audioUrl: '', description: '', lyrics: '', album: '' }])
   const removeSong = (idx: number) => setSongs(prev => prev.filter((_, i) => i !== idx))
   const [saving, setSaving] = useState(false)
+  const [saveMessage, setSaveMessage] = useState('')
 
   useEffect(() => {
     fetch('/api/albums?all=true').then(r => r.json()).then(d => {
@@ -28,7 +29,7 @@ export default function AdminRecommendPage() {
         setAllSongs(flat)
       }
     }).catch(() => {})
-    fetch('/api/recommended-songs').then(r => r.json()).then(d => {
+    fetch('/api/recommended-songs', { cache: 'no-store' }).then(r => r.json()).then(d => {
       if (d.success && d.data && d.data.length > 0) {
         setSongs(d.data.map((s: any) => ({ title: s.title, artist: s.artist, coverUrl: s.coverUrl || '', audioUrl: s.audioUrl || '', description: s.description || '', lyrics: s.lyrics || '', album: s.album || '' })))
       }
@@ -55,11 +56,39 @@ export default function AdminRecommendPage() {
 
   const save = async () => {
     setSaving(true)
-    await fetch('/api/recommended-songs', {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(songs),
-    })
-    setSaving(false)
+    setSaveMessage('')
+
+    try {
+      const response = await fetch('/api/recommended-songs', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        body: JSON.stringify(songs),
+      })
+      const result = await response.json()
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || '保存失败')
+      }
+
+      const freshResponse = await fetch('/api/recommended-songs', { cache: 'no-store' })
+      const freshResult = await freshResponse.json()
+      if (freshResult.success && Array.isArray(freshResult.data)) {
+        setSongs(freshResult.data.map((s: any) => ({
+          title: s.title,
+          artist: s.artist,
+          coverUrl: s.coverUrl || '',
+          audioUrl: s.audioUrl || '',
+          description: s.description || '',
+          lyrics: s.lyrics || '',
+          album: s.album || '',
+        })))
+      }
+      setSaveMessage('保存成功，前台数据已更新')
+    } catch (error) {
+      setSaveMessage(error instanceof Error ? error.message : '保存失败，请重试')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -126,6 +155,11 @@ export default function AdminRecommendPage() {
           className="flex items-center gap-2 px-5 py-2 rounded-lg bg-gradient-to-r from-accent-purple to-accent-blue text-white text-sm font-medium hover:shadow-lg disabled:opacity-50 transition-all">
           <Save size={15} />{saving ? '保存中...' : '保存推荐歌曲'}
         </button>
+        {saveMessage && (
+          <span className={`text-xs ${saveMessage.includes('成功') ? 'text-emerald-400' : 'text-red-400'}`}>
+            {saveMessage}
+          </span>
+        )}
       </div>
     </div>
   )

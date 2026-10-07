@@ -7,12 +7,6 @@ export const cacheHeaders = {
   'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=60',
 }
 
-export const getRecommendedSongs = unstable_cache(
-  async () => prisma.recommendedSong.findMany({ orderBy: { sortOrder: 'asc' } }),
-  ['public', 'recommended-songs'],
-  { revalidate: REVALIDATE_SECONDS, tags: ['recommended-songs'] },
-)
-
 export const getHeroData = unstable_cache(
   async () => {
     const setting = await prisma.setting.findUnique({ where: { key: 'hero_data' } })

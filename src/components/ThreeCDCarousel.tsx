@@ -257,7 +257,7 @@ export default function ThreeCDCarousel({
 
     const loadItems = async () => {
       try {
-        const recommendedResponse = await fetch('/api/recommended-songs')
+        const recommendedResponse = await fetch('/api/recommended-songs', { cache: 'no-store' })
         const recommendedResult = await recommendedResponse.json()
         if (recommendedResult.success && Array.isArray(recommendedResult.data) && recommendedResult.data.length > 0) {
           setFetchedItems(mapSongs(recommendedResult.data))
