@@ -138,36 +138,6 @@ function makeCaseReflectionTexture() {
   return texture
 }
 
-function makeCasePhotoTexture(onReady: () => void) {
-  const canvas = document.createElement('canvas')
-  canvas.width = 1024
-  canvas.height = 737
-  const context = canvas.getContext('2d')
-  const texture = new THREE.CanvasTexture(canvas)
-  texture.colorSpace = THREE.SRGBColorSpace
-  if (!context) return texture
-
-  const image = new Image()
-  image.crossOrigin = 'anonymous'
-  image.onload = () => {
-    context.clearRect(0, 0, canvas.width, canvas.height)
-    context.drawImage(image, 0, 0, canvas.width, canvas.height)
-    const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
-    const { data } = imageData
-
-    for (let index = 0; index < data.length; index += 4) {
-      const luminance = (data[index] + data[index + 1] + data[index + 2]) / 3
-      data[index + 3] = Math.max(0, Math.min(255, (245 - luminance) * 1.6))
-    }
-
-    context.putImageData(imageData, 0, 0)
-    texture.needsUpdate = true
-    onReady()
-  }
-  image.src = '/images/cd-case.jpg'
-  return texture
-}
-
 function parseLyrics(text: string | null | undefined) {
   if (!text) return []
 
@@ -469,19 +439,9 @@ export default function ThreeCDCarousel({
       toneMapped: false,
     })
     const caseReflectionGeometry = new THREE.PlaneGeometry(3.02, 2.8)
-    const casePhotoTexture = makeCasePhotoTexture(() => wakeRenderRef.current())
-    const casePhotoMaterial = new THREE.MeshBasicMaterial({
-      map: casePhotoTexture,
-      transparent: true,
-      depthWrite: false,
-      alphaTest: 0.01,
-      side: THREE.DoubleSide,
-      toneMapped: false,
-    })
-    const casePhotoGeometry = new THREE.PlaneGeometry(3.36, 2.42)
 
     const caseGroup = new THREE.Group()
-    const sourcePoint = cubicPoint(0, 2.5, 1.5)
+    const sourcePoint = cubicPoint(0, 3.2, 1.85)
     caseGroup.position.set(sourcePoint.x, sourcePoint.y, -1.86)
     caseGroup.rotation.set(-0.08, -0.26, -0.37)
     caseGroup.scale.setScalar(0.82)
@@ -543,24 +503,8 @@ export default function ThreeCDCarousel({
       hinge.position.set(1.64, y, -0.02)
       hinge.rotation.z = Math.PI / 2
       hinge.castShadow = true
-      hinge.visible = false
       caseGroup.add(hinge)
     }
-
-    const casePhoto = new THREE.Mesh(casePhotoGeometry, casePhotoMaterial)
-    casePhoto.position.z = 0.25
-    casePhoto.renderOrder = 5
-    caseGroup.add(casePhoto)
-
-    caseTray.visible = false
-    caseRing.visible = false
-    caseShell.visible = false
-    caseReflection.visible = false
-    topEdge.visible = false
-    bottomEdge.visible = false
-    leftEdge.visible = false
-    rightEdge.visible = false
-    spine.visible = false
     const textureLoader = new THREE.TextureLoader()
     textureLoader.setCrossOrigin('anonymous')
     const groups: THREE.Group[] = []
@@ -677,7 +621,7 @@ export default function ThreeCDCarousel({
         const offset = index - smoothIndexRef.current
         const distance = Math.abs(offset)
         const u = (2 - offset) / 4
-        const point = cubicPoint(u, 2.5, 1.5)
+        const point = cubicPoint(u, 3.2, 1.85)
         const revealProgress = Math.max(0, Math.min(1, (2 - offset) / 0.72))
         const edgeFade = distance > 2.7 ? Math.max(0, 1 - (distance - 2.7) * 0.72) : 1
         const opacity = revealProgress * edgeFade
@@ -772,13 +716,10 @@ export default function ThreeCDCarousel({
       hingeGeometry.dispose()
       caseReflectionGeometry.dispose()
       caseReflectionTexture.dispose()
-      casePhotoGeometry.dispose()
-      casePhotoTexture.dispose()
       caseTrayMaterial.dispose()
       caseShellMaterial.dispose()
       caseRingMaterial.dispose()
       caseReflectionMaterial.dispose()
-      casePhotoMaterial.dispose()
       shadowPlane.geometry.dispose()
       shadowPlane.material.dispose()
       pmremGenerator.dispose()
