@@ -230,7 +230,16 @@ export default function ThreeCDCarousel({
   useEffect(() => {
     if (items) return
 
-    const mapSongs = (songs: Partial<Song>[]) => songs.map((song, index) => {
+    const sortNewestFirst = (songs: Partial<Song>[]) => [...songs].sort((a, b) => {
+      const aCreatedAt = a.createdAt ? new Date(a.createdAt).getTime() : 0
+      const bCreatedAt = b.createdAt ? new Date(b.createdAt).getTime() : 0
+      const createdAtDiff = bCreatedAt - aCreatedAt
+
+      if (createdAtDiff !== 0) return createdAtDiff
+      return Number(b.id ?? 0) - Number(a.id ?? 0)
+    })
+
+    const mapSongs = (songs: Partial<Song>[]) => sortNewestFirst(songs).map((song, index) => {
       const id = typeof song.id === 'number' ? song.id : -(400 + index)
       const coverUrl = apiFileUrl(song.coverUrl)
       const audioUrl = apiFileUrl(song.audioUrl) || ''
