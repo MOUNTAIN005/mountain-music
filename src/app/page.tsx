@@ -11,7 +11,7 @@ export default function HomePage() {
           fill
           priority
           sizes="100vw"
-          className="object-cover object-right"
+          className="object-cover object-right max-sm:origin-right max-sm:scale-[0.84]"
         />
       </div>
       <div className="relative z-10">
