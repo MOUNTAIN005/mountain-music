@@ -888,7 +888,7 @@ export default function ThreeCDCarousel({
   }
 
   return (
-    <section className={`relative h-screen overflow-hidden bg-[#f3f3f0] text-[#0a0a0a] ${className}`}>
+    <section className={`relative h-screen overflow-hidden text-[#0a0a0a] ${className}`}>
       <div
         ref={scrollRef}
         data-lenis-prevent
